@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Vriddhi — Grow More. Earn More. Live More.</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,900;1,500;1,700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --forest: #0d3b1a;
+    --forest-mid: #1B5E20;
+    --forest-light: #2E7D32;
+    --leaf: #4CAF50;
+    --leaf-light: #81C784;
+    --gold: #F9A825;
+    --gold-light: #FFD54F;
+    --gold-pale: #FFF8E1;
+    --cream: #FAFAF5;
+    --warm-white: #F5F0E8;
+    --charcoal: #1C1C1E;
+    --gray: #666;
+    --border: rgba(255,255,255,0.1);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--charcoal);
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* Custom cursor */
+  .cursor {
+    width: 12px; height: 12px;
+    background: var(--gold);
+    border-radius: 50%;
+    position: fixed; top: 0; left: 0;
+    pointer-events: none; z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: transform 0.1s ease, width 0.2s, height 0.2s, background 0.2s;
+    mix-blend-mode: multiply;
+  }
+  .cursor-ring {
+    width: 36px; height: 36px;
+    border: 1.5px solid var(--forest-mid);
+    border-radius: 50%;
+    position: fixed; top: 0; left: 0;
+    pointer-events: none; z-index: 9998;
+    transform: translate(-50%, -50%);
+    transition: transform 0.15s ease, width 0.3s, height 0.3s;
+  }
+  body:hover .cursor { opacity: 1; }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 1000;
+    opacity: 0.4;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding: 20px 60px;
+    display: flex; align-items: center; justify-content: space-between;
+    transition: all 0.4s ease;
+  }
+  nav.scrolled {
+    background: rgba(13,59,26,0.95);
+    backdrop-filter: blur(20px);
+    padding: 14px 60px;
+    border-bottom: 1px solid rgba(249,168,37,0.2);
+  }
+  .nav-logo {
+    display: flex; align-items: center; gap: 12px;
+    text-decoration: none;
+  }
+  .nav-logo-icon {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, var(--forest-mid), var(--leaf));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    box-shadow: 0 4px 12px rgba(27,94,32,0.4);
+  }
+  .nav-logo-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; font-weight: 700;
+    color: white;
+    letter-spacing: -0.3px;
+  }
+  .nav-links {
+    display: flex; gap: 36px; list-style: none;
+  }
+  .nav-links a {
+    color: rgba(255,255,255,0.8);
+    text-decoration: none;
+    font-size: 14px; font-weight: 500;
+    letter-spacing: 0.3px;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--gold); }
+  .nav-cta {
+    background: var(--gold);
+    color: var(--forest) !important;
+    padding: 10px 24px;
+    border-radius: 50px;
+    font-weight: 600 !important;
+    transition: all 0.2s !important;
+    box-shadow: 0 4px 16px rgba(249,168,37,0.3);
+  }
+  .nav-cta:hover {
+    background: var(--gold-light) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(249,168,37,0.4) !important;
+  }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    background: linear-gradient(to bottom, rgba(10,46,20,0.75) 0%, rgba(13,59,26,0.85) 100%), url("/images/hero-farm.jpg") center/cover no-repeat;
+    position: relative; overflow: hidden;
+    display: flex; align-items: center;
+    padding: 120px 60px 80px;
+  }
+  .hero-particles {
+    position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+  }
+  .particle {
+    position: absolute;
+    width: 3px; height: 3px;
+    background: var(--gold);
+    border-radius: 50%;
+    animation: float linear infinite;
+    opacity: 0;
+  }
+  @keyframes float {
+    0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+    10% { opacity: 0.6; }
+    90% { opacity: 0.3; }
+    100% { transform: translateY(-100px) rotate(720deg); opacity: 0; }
+  }
+  .hero-bg-circle {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(76,175,80,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-bg-circle-1 { width: 800px; height: 800px; top: -200px; right: -200px; }
+  .hero-bg-circle-2 { width: 500px; height: 500px; bottom: -100px; left: -100px; }
+
+  /* Decorative lines */
+  .hero::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 50%; height: 100%;
+    background: url("data:image/svg+xml,%3Csvg width='600' height='800' viewBox='0 0 600 800' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='400' cy='200' r='300' fill='none' stroke='rgba(76,175,80,0.08)' stroke-width='1'/%3E%3Ccircle cx='400' cy='200' r='220' fill='none' stroke='rgba(76,175,80,0.06)' stroke-width='1'/%3E%3Ccircle cx='400' cy='200' r='140' fill='none' stroke='rgba(249,168,37,0.06)' stroke-width='1'/%3E%3Cline x1='100' y1='0' x2='600' y2='800' stroke='rgba(76,175,80,0.05)' stroke-width='1'/%3E%3Cline x1='200' y1='0' x2='700' y2='800' stroke='rgba(76,175,80,0.04)' stroke-width='1'/%3E%3C/svg%3E") no-repeat center/cover;
+    pointer-events: none;
+  }
+
+  .hero-content {
+    position: relative; z-index: 2;
+    max-width: 720px;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(249,168,37,0.15);
+    border: 1px solid rgba(249,168,37,0.3);
+    border-radius: 50px;
+    padding: 8px 16px;
+    margin-bottom: 32px;
+    animation: fadeUp 0.8s ease forwards;
+    opacity: 0;
+  }
+  .hero-badge-dot {
+    width: 7px; height: 7px;
+    background: var(--gold);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.4); }
+  }
+  .hero-badge span {
+    color: var(--gold);
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 1.5px; text-transform: uppercase;
+  }
+
+  .hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(52px, 7vw, 88px);
+    font-weight: 900;
+    line-height: 1.0;
+    color: white;
+    margin-bottom: 12px;
+    animation: fadeUp 0.8s 0.2s ease forwards;
+    opacity: 0;
+  }
+  .hero-title em {
+    font-style: italic;
+    color: var(--gold);
+    display: block;
+  }
+
+  .hero-subtitle {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(18px, 2.5vw, 26px);
+    color: rgba(255,255,255,0.6);
+    font-weight: 500;
+    font-style: italic;
+    margin-bottom: 28px;
+    animation: fadeUp 0.8s 0.35s ease forwards;
+    opacity: 0;
+  }
+
+  .hero-desc {
+    font-size: 17px;
+    color: rgba(255,255,255,0.7);
+    line-height: 1.7;
+    max-width: 540px;
+    margin-bottom: 48px;
+    font-weight: 300;
+    animation: fadeUp 0.8s 0.5s ease forwards;
+    opacity: 0;
+  }
+
+  .hero-actions {
+    display: flex; gap: 16px; align-items: center;
+    flex-wrap: wrap;
+    animation: fadeUp 0.8s 0.65s ease forwards;
+    opacity: 0;
+  }
+  .btn-primary {
+    background: var(--gold);
+    color: var(--forest);
+    padding: 16px 36px;
+    border-radius: 50px;
+    font-weight: 700; font-size: 15px;
+    text-decoration: none;
+    display: inline-flex; align-items: center; gap: 8px;
+    transition: all 0.25s;
+    box-shadow: 0 8px 30px rgba(249,168,37,0.35);
+    letter-spacing: 0.2px;
+  }
+  .btn-primary:hover {
+    background: var(--gold-light);
+    transform: translateY(-3px);
+    box-shadow: 0 16px 40px rgba(249,168,37,0.45);
+  }
+  .btn-secondary {
+    color: rgba(255,255,255,0.85);
+    text-decoration: none;
+    font-size: 15px; font-weight: 500;
+    display: inline-flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.3);
+    padding-bottom: 2px;
+    transition: all 0.2s;
+  }
+  .btn-secondary:hover { color: white; border-color: var(--gold); }
+
+  .hero-stats {
+    position: absolute;
+    bottom: 60px; right: 60px;
+    display: flex; gap: 40px;
+    z-index: 2;
+    animation: fadeUp 0.8s 0.8s ease forwards;
+    opacity: 0;
+  }
+  .stat-item { text-align: right; }
+  .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 40px; font-weight: 700;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 12px; font-weight: 500;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 1px; text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .hero-scroll {
+    position: absolute; bottom: 30px; left: 60px;
+    z-index: 2;
+    display: flex; align-items: center; gap: 10px;
+    animation: fadeUp 0.8s 1s ease forwards;
+    opacity: 0;
+  }
+  .scroll-line {
+    width: 40px; height: 1px;
+    background: rgba(255,255,255,0.3);
+    animation: scrollLine 2s ease infinite;
+  }
+  @keyframes scrollLine {
+    0%, 100% { width: 40px; opacity: 0.3; }
+    50% { width: 60px; opacity: 0.7; }
+  }
+  .scroll-text {
+    color: rgba(255,255,255,0.4);
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* MARQUEE STRIP */
+  .marquee-strip {
+    background: var(--gold);
+    padding: 14px 0;
+    overflow: hidden;
+    position: relative;
+  }
+  .marquee-track {
+    display: flex; gap: 0;
+    animation: marquee 25s linear infinite;
+    white-space: nowrap;
+  }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  .marquee-item {
+    display: inline-flex; align-items: center; gap: 12px;
+    padding: 0 28px;
+    font-family: 'Playfair Display', serif;
+    font-size: 14px; font-weight: 700;
+    color: var(--forest);
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+  .marquee-dot { width: 5px; height: 5px; background: var(--forest-mid); border-radius: 50%; flex-shrink: 0; }
+
+  /* FEATURES */
+  .features {
+    padding: 120px 60px;
+    background: var(--cream);
+    position: relative;
+  }
+  .section-label {
+    font-size: 11px; font-weight: 600;
+    color: var(--leaf);
+    letter-spacing: 3px; text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-label::before {
+    content: ''; display: block;
+    width: 24px; height: 1px; background: var(--leaf);
+  }
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(36px, 5vw, 56px);
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--forest);
+    margin-bottom: 16px;
+  }
+  .section-title em { font-style: italic; color: var(--forest-light); }
+  .section-desc {
+    font-size: 17px; color: var(--gray);
+    line-height: 1.7; max-width: 520px;
+    margin-bottom: 64px; font-weight: 300;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .feature-card {
+    background: white;
+    border-radius: 20px;
+    padding: 36px 32px;
+    border: 1px solid rgba(76,175,80,0.12);
+    transition: all 0.35s cubic-bezier(0.23, 1, 0.32, 1);
+    position: relative; overflow: hidden;
+    cursor: default;
+  }
+  .feature-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--forest-mid), var(--gold));
+    transform: scaleX(0); transform-origin: left;
+    transition: transform 0.35s ease;
+  }
+  .feature-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 24px 48px rgba(27,94,32,0.12);
+    border-color: rgba(76,175,80,0.25);
+  }
+  .feature-card:hover::before { transform: scaleX(1); }
+  .feature-icon {
+    width: 52px; height: 52px;
+    background: var(--gold-pale);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; margin-bottom: 20px;
+    transition: transform 0.3s;
+  }
+  .feature-card:hover .feature-icon { transform: scale(1.1) rotate(-5deg); }
+  .feature-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px; font-weight: 700;
+    color: var(--forest); margin-bottom: 10px;
+  }
+  .feature-card p {
+    font-size: 14px; color: var(--gray);
+    line-height: 1.65; font-weight: 300;
+  }
+
+  /* Tall card */
+  .feature-card.tall {
+    grid-row: span 2;
+    background: linear-gradient(160deg, var(--forest) 0%, #1a4a20 100%);
+    border-color: transparent;
+  }
+  .feature-card.tall h3 { color: white; }
+  .feature-card.tall p { color: rgba(255,255,255,0.65); }
+  .feature-card.tall .feature-icon { background: rgba(249,168,37,0.2); }
+
+  /* Gold card */
+  .feature-card.gold-card {
+    background: linear-gradient(135deg, var(--gold) 0%, #e6990a 100%);
+    border-color: transparent;
+  }
+  .feature-card.gold-card h3 { color: var(--forest); }
+  .feature-card.gold-card p { color: rgba(13,59,26,0.75); }
+  .feature-card.gold-card .feature-icon { background: rgba(13,59,26,0.1); }
+
+  /* CATEGORIES */
+  .categories {
+    padding: 120px 60px;
+    background: var(--forest);
+    position: relative; overflow: hidden;
+  }
+  .categories::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 70% 50%, rgba(76,175,80,0.1) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .categories .section-label { color: var(--gold); }
+  .categories .section-label::before { background: var(--gold); }
+  .categories .section-title { color: white; }
+  .categories .section-title em { color: var(--leaf-light); }
+  .categories .section-desc { color: rgba(255,255,255,0.55); }
+
+  .categories-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  .category-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 28px 24px;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: default;
+    position: relative; overflow: hidden;
+  }
+  .category-card::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(76,175,80,0.1), transparent);
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .category-card:hover {
+    background: rgba(255,255,255,0.09);
+    border-color: rgba(249,168,37,0.3);
+    transform: translateY(-4px);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.3);
+  }
+  .category-card:hover::after { opacity: 1; }
+  .category-emoji { font-size: 36px; margin-bottom: 14px; display: block; }
+  .category-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px; font-weight: 700;
+    color: white; margin-bottom: 6px;
+  }
+  .category-card p {
+    font-size: 12px; color: rgba(255,255,255,0.45);
+    line-height: 1.5;
+  }
+  .category-count {
+    display: inline-block;
+    background: rgba(249,168,37,0.2);
+    color: var(--gold);
+    font-size: 11px; font-weight: 600;
+    padding: 3px 10px; border-radius: 20px;
+    margin-top: 10px;
+  }
+
+  /* AI SECTION */
+  .ai-section {
+    padding: 120px 60px;
+    background: var(--warm-white);
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 80px; align-items: center;
+  }
+  .ai-visual {
+    position: relative;
+    height: 520px;
+  }
+  .ai-card-main {
+    position: absolute;
+    top: 0; left: 0; right: 40px;
+    background: white;
+    border-radius: 24px;
+    padding: 32px;
+    box-shadow: 0 24px 60px rgba(27,94,32,0.12);
+    border: 1px solid rgba(76,175,80,0.15);
+  }
+  .ai-chat-header {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(76,175,80,0.1);
+  }
+  .ai-avatar {
+    width: 42px; height: 42px;
+    background: linear-gradient(135deg, var(--forest-mid), var(--leaf));
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .ai-chat-name { font-weight: 600; font-size: 15px; color: var(--charcoal); }
+  .ai-chat-status { font-size: 12px; color: var(--leaf); }
+  .ai-online { display: flex; align-items: center; gap: 5px; }
+  .ai-online::before {
+    content: ''; width: 6px; height: 6px;
+    background: var(--leaf); border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  .chat-bubble {
+    border-radius: 16px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    font-size: 13.5px; line-height: 1.55;
+    max-width: 85%;
+  }
+  .bubble-user {
+    background: var(--forest);
+    color: white;
+    margin-left: auto;
+    border-bottom-right-radius: 4px;
+  }
+  .bubble-ai {
+    background: rgba(76,175,80,0.08);
+    color: var(--charcoal);
+    border-bottom-left-radius: 4px;
+    border: 1px solid rgba(76,175,80,0.15);
+  }
+  .bubble-ai strong { color: var(--forest-mid); }
+  .typing-indicator {
+    display: flex; gap: 4px; align-items: center;
+    padding: 10px 14px;
+    background: rgba(76,175,80,0.06);
+    border-radius: 16px; border-bottom-left-radius: 4px;
+    width: fit-content;
+    border: 1px solid rgba(76,175,80,0.1);
+  }
+  .typing-dot {
+    width: 6px; height: 6px;
+    background: var(--leaf);
+    border-radius: 50%;
+    animation: typingAnim 1.4s infinite;
+  }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typingAnim {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+    30% { transform: translateY(-6px); opacity: 1; }
+  }
+
+  .ai-floating-card {
+    position: absolute;
+    background: white;
+    border-radius: 16px;
+    padding: 16px 20px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+    font-size: 13px;
+  }
+  .ai-card-2 {
+    bottom: 40px; right: 0;
+    border: 1px solid rgba(249,168,37,0.3);
+    animation: floatCard 3s ease-in-out infinite;
+  }
+  @keyframes floatCard {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  .ai-card-label { font-size: 11px; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .ai-card-value { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--forest); }
+  .ai-card-sub { font-size: 12px; color: var(--leaf); margin-top: 2px; }
+
+  .ai-content .section-desc { margin-bottom: 40px; }
+  .ai-features-list { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+  .ai-feature-item {
+    display: flex; gap: 14px; align-items: flex-start;
+    padding: 16px 20px;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid rgba(76,175,80,0.1);
+    transition: all 0.25s;
+  }
+  .ai-feature-item:hover {
+    border-color: var(--leaf);
+    box-shadow: 0 4px 16px rgba(27,94,32,0.08);
+    transform: translateX(4px);
+  }
+  .ai-feature-icon {
+    width: 36px; height: 36px; flex-shrink: 0;
+    background: var(--gold-pale);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .ai-feature-text h4 { font-size: 14px; font-weight: 600; color: var(--charcoal); margin-bottom: 2px; }
+  .ai-feature-text p { font-size: 12px; color: var(--gray); line-height: 1.5; }
+
+  /* HOW IT WORKS */
+  .how-it-works {
+    padding: 120px 60px;
+    background: var(--cream);
+    text-align: center;
+  }
+  .steps-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 0; margin-top: 64px;
+    position: relative;
+  }
+  .steps-grid::before {
+    content: '';
+    position: absolute;
+    top: 32px; left: 12.5%; right: 12.5%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--leaf), var(--gold), var(--leaf), transparent);
+    z-index: 0;
+  }
+  .step-item {
+    padding: 0 24px;
+    position: relative; z-index: 1;
+  }
+  .step-number {
+    width: 64px; height: 64px;
+    background: white;
+    border: 2px solid var(--leaf);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; font-weight: 700;
+    color: var(--forest);
+    margin: 0 auto 24px;
+    box-shadow: 0 4px 20px rgba(27,94,32,0.1);
+    transition: all 0.3s;
+  }
+  .step-item:hover .step-number {
+    background: var(--forest);
+    color: white;
+    border-color: var(--forest);
+    transform: scale(1.1);
+  }
+  .step-item:nth-child(2) .step-number { border-color: var(--gold); }
+  .step-item:nth-child(2):hover .step-number { background: var(--gold); color: var(--forest); border-color: var(--gold); }
+  .step-emoji { font-size: 32px; display: block; margin-bottom: 12px; }
+  .step-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px; font-weight: 700;
+    color: var(--forest); margin-bottom: 8px;
+  }
+  .step-desc { font-size: 13.5px; color: var(--gray); line-height: 1.6; }
+
+  /* TESTIMONIALS */
+  .testimonials {
+    padding: 120px 60px;
+    background: linear-gradient(160deg, var(--forest) 0%, #0f3d1a 100%);
+    position: relative; overflow: hidden;
+  }
+  .testimonials::before {
+    content: '"';
+    position: absolute; top: 40px; right: 80px;
+    font-family: 'Playfair Display', serif;
+    font-size: 400px; color: rgba(255,255,255,0.02);
+    line-height: 1; pointer-events: none;
+  }
+  .testimonials .section-label { color: var(--gold); }
+  .testimonials .section-label::before { background: var(--gold); }
+  .testimonials .section-title { color: white; }
+
+  .testimonials-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 24px; margin-top: 64px;
+  }
+  .testimonial-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 20px;
+    padding: 32px 28px;
+    transition: all 0.3s;
+    position: relative;
+  }
+  .testimonial-card:hover {
+    background: rgba(255,255,255,0.1);
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  }
+  .testimonial-card.featured {
+    background: var(--gold);
+    border-color: var(--gold);
+  }
+  .testimonial-card.featured .quote-text { color: var(--forest); }
+  .testimonial-card.featured .farmer-name { color: var(--forest); }
+  .testimonial-card.featured .farmer-location { color: rgba(13,59,26,0.65); }
+  .stars { color: var(--gold); font-size: 14px; margin-bottom: 16px; letter-spacing: 2px; }
+  .testimonial-card.featured .stars { color: var(--forest); }
+  .quote-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px; font-weight: 500; font-style: italic;
+    color: rgba(255,255,255,0.9);
+    line-height: 1.65; margin-bottom: 24px;
+  }
+  .farmer-info { display: flex; align-items: center; gap: 12px; }
+  .farmer-avatar {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--forest-mid), var(--leaf));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .farmer-name { font-weight: 600; font-size: 14px; color: white; }
+  .farmer-location { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 1px; }
+  .saving-badge {
+    display: inline-block;
+    background: rgba(76,175,80,0.2);
+    color: var(--leaf-light);
+    font-size: 12px; font-weight: 600;
+    padding: 4px 12px; border-radius: 20px;
+    margin-top: 16px;
+  }
+  .testimonial-card.featured .saving-badge {
+    background: rgba(13,59,26,0.15);
+    color: var(--forest);
+  }
+
+  /* CTA SECTION */
+  .cta-section {
+    padding: 120px 60px;
+    background: var(--cream);
+    text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .cta-section::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 800px; height: 800px;
+    background: radial-gradient(circle, rgba(76,175,80,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .cta-inner {
+    position: relative; z-index: 1;
+    max-width: 680px; margin: 0 auto;
+  }
+  .cta-inner .section-label { justify-content: center; }
+  .cta-inner .section-label::before { display: none; }
+  .cta-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(40px, 5.5vw, 64px);
+    font-weight: 900; line-height: 1.1;
+    color: var(--forest); margin-bottom: 20px;
+  }
+  .cta-title em { font-style: italic; color: var(--forest-light); }
+  .cta-desc { font-size: 17px; color: var(--gray); line-height: 1.7; margin-bottom: 48px; font-weight: 300; }
+  .cta-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .btn-dark {
+    background: var(--forest);
+    color: white;
+    padding: 16px 40px;
+    border-radius: 50px;
+    font-weight: 700; font-size: 15px;
+    text-decoration: none;
+    display: inline-flex; align-items: center; gap: 8px;
+    transition: all 0.25s;
+    box-shadow: 0 8px 30px rgba(27,94,32,0.25);
+  }
+  .btn-dark:hover {
+    background: var(--forest-light);
+    transform: translateY(-3px);
+    box-shadow: 0 16px 40px rgba(27,94,32,0.35);
+  }
+  .btn-outline {
+    background: transparent;
+    color: var(--forest);
+    padding: 15px 36px;
+    border-radius: 50px;
+    border: 2px solid var(--forest);
+    font-weight: 600; font-size: 15px;
+    text-decoration: none;
+    display: inline-flex; align-items: center; gap: 8px;
+    transition: all 0.25s;
+  }
+  .btn-outline:hover {
+    background: var(--forest);
+    color: white;
+    transform: translateY(-2px);
+  }
+
+  /* FOOTER */
+  footer {
+    background: var(--charcoal);
+    color: rgba(255,255,255,0.7);
+    padding: 64px 60px 40px;
+  }
+  .footer-top {
+    display: grid; grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 60px; margin-bottom: 48px;
+    padding-bottom: 48px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .footer-brand .nav-logo-text { font-size: 26px; display: block; margin-bottom: 12px; }
+  .footer-tagline {
+    font-family: 'Playfair Display', serif;
+    font-style: italic; font-size: 14px;
+    color: var(--gold); margin-bottom: 16px;
+  }
+  .footer-desc { font-size: 13px; line-height: 1.7; max-width: 280px; }
+  .footer-col h4 {
+    font-size: 11px; font-weight: 600;
+    color: rgba(255,255,255,0.4);
+    text-transform: uppercase; letter-spacing: 2px;
+    margin-bottom: 20px;
+  }
+  .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .footer-col a {
+    color: rgba(255,255,255,0.6); text-decoration: none;
+    font-size: 14px; transition: color 0.2s;
+  }
+  .footer-col a:hover { color: var(--gold); }
+  .footer-bottom {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12px; color: rgba(255,255,255,0.3);
+  }
+  .footer-langs { display: flex; gap: 12px; }
+  .lang-btn {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.5);
+    padding: 5px 12px; border-radius: 20px;
+    font-size: 11px; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .lang-btn:hover, .lang-btn.active {
+    background: var(--gold);
+    color: var(--forest);
+    border-color: var(--gold);
+    font-weight: 600;
+  }
+
+  /* Responsive basics */
+  @media (max-width: 900px) {
+    nav { padding: 16px 24px; }
+    nav.scrolled { padding: 12px 24px; }
+    .nav-links { display: none; }
+    .hero { padding: 100px 24px 60px; }
+    .hero-stats { display: none; }
+    .features { padding: 80px 24px; }
+    .features-grid { grid-template-columns: 1fr; }
+    .categories { padding: 80px 24px; }
+    .categories-grid { grid-template-columns: repeat(2, 1fr); }
+    .ai-section { padding: 80px 24px; grid-template-columns: 1fr; }
+    .ai-visual { height: auto; position: relative; }
+    .ai-card-main { position: relative; right: auto; }
+    .ai-card-2 { display: none; }
+    .how-it-works { padding: 80px 24px; }
+    .steps-grid { grid-template-columns: repeat(2, 1fr); }
+    .steps-grid::before { display: none; }
+    .testimonials { padding: 80px 24px; }
+    .testimonials-grid { grid-template-columns: 1fr; }
+    .cta-section { padding: 80px 24px; }
+    footer { padding: 48px 24px 32px; }
+    .footer-top { grid-template-columns: 1fr; gap: 32px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Custom cursor -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav id="navbar">
+  <a href="#" class="nav-logo">
+    <div class="nav-logo-icon">🌱</div>
+    <span class="nav-logo-text">Vriddhi</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#categories">Categories</a></li>
+    <li><a href="#ai">AI Tools</a></li>
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#" class="nav-cta">Get Started Free</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-particles" id="particles"></div>
+  <div class="hero-bg-circle hero-bg-circle-1"></div>
+  <div class="hero-bg-circle hero-bg-circle-2"></div>
+
+  <div class="hero-content">
+    <div class="hero-badge">
+      <div class="hero-badge-dot"></div>
+      <span>India's #1 Agri Marketplace</span>
+    </div>
+    <h1 class="hero-title">
+      Where Every
+      <em>Seed Becomes</em>
+      a Story.
+    </h1>
+    <p class="hero-subtitle">"Grow More. Earn More. Live More."</p>
+    <p class="hero-desc">
+      Connect with verified fertilizer shops, seed suppliers, and agri-input dealers near you.
+      Powered by AI. Built for India's 140 million farming families.
+    </p>
+    <div class="hero-actions">
+      <a href="#" class="btn-primary">
+        Start Growing Free
+        <span>→</span>
+      </a>
+      <a href="#features" class="btn-secondary">
+        Explore platform
+        <span>↓</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="hero-stats">
+    <div class="stat-item">
+      <div class="stat-num">50K+</div>
+      <div class="stat-label">Farmers</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">8K+</div>
+      <div class="stat-label">Verified Shops</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">₹2Cr+</div>
+      <div class="stat-label">Farmer Savings</div>
+    </div>
+  </div>
+
+  <div class="hero-scroll">
+    <div class="scroll-line"></div>
+    <span class="scroll-text">Scroll to explore</span>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-strip">
+  <div class="marquee-track" id="marquee">
+    <!-- Content duplicated for seamless loop -->
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="section-label">Why Vriddhi</div>
+  <h2 class="section-title">Everything your farm <em>needs,</em><br>one place.</h2>
+  <p class="section-desc">From seeds to harvest — Vriddhi connects you with the best local suppliers, AI guidance, and real-time market intelligence.</p>
+
+  <div class="features-grid">
+    <div class="feature-card tall">
+      <div class="feature-icon">🗺️</div>
+      <h3>Location-Based Discovery</h3>
+      <p>Find verified shops within your radius on an interactive map. See real-time stock, compare prices, and get directions — all before leaving your farm.</p>
+      <br>
+      <div style="background:rgba(249,168,37,0.15);border-radius:12px;padding:16px;margin-top:16px;">
+        <div style="font-size:11px;color:rgba(255,255,255,0.5);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Nearest Shop</div>
+        <div style="font-family:'Playfair Display',serif;font-size:20px;color:var(--gold);font-weight:700;">2.4 km away</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:2px;">12 products in stock ✓</div>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">💬</div>
+      <h3>Farmer-Shop Chat</h3>
+      <p>Real-time messaging with any shop owner. Share photos, ask about products, negotiate, and get expert advice — in your local language.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">📊</div>
+      <h3>Live Mandi Prices</h3>
+      <p>Track commodity prices at mandis near you. AI predicts the best day to sell your harvest for maximum profit.</p>
+    </div>
+
+    <div class="feature-card gold-card">
+      <div class="feature-icon">🏛️</div>
+      <h3>Govt Scheme Matcher</h3>
+      <p>Never miss an eligible subsidy. AI matches your profile to PM-KISAN, crop insurance, soil health cards, and 100+ more schemes instantly.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">📅</div>
+      <h3>AI Crop Calendar</h3>
+      <p>Generate a full season plan with exact dates for every activity — fertilizing, spraying, irrigation — with push reminders.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">🌦️</div>
+      <h3>Weather-Smart Alerts</h3>
+      <p>Hyper-local weather integrated with farming advice. "Rain in 3 days — don't spray pesticide today."</p>
+    </div>
+  </div>
+</section>
+
+<!-- CATEGORIES -->
+<section class="categories" id="categories">
+  <div class="section-label">What We Offer</div>
+  <h2 class="section-title">Every input your <em>crop needs.</em></h2>
+  <p class="section-desc">8 major categories, thousands of verified products from local shops near you.</p>
+
+  <div class="categories-grid">
+    <div class="category-card">
+      <span class="category-emoji">🌱</span>
+      <h3>Seeds</h3>
+      <p>Hybrid, organic, heirloom — all crops</p>
+      <div class="category-count">2,400+ varieties</div>
+    </div>
+    <div class="category-card">
+      <span class="category-emoji">🧪</span>
+      <h3>Fertilizers</h3>
+      <p>NPK, micronutrients, bio & organic</p>
+      <div class="category-count">800+ products</div>
+    </div>
+    <div class="category-card">
+      <span class="category-emoji">🐛</span>
+      <h3>Pesticides</h3>
+      <p>Insecticides, fungicides, bio-pesticides</p>
+      <div class="category-count">600+ products</div>
+    </div>
+    <div class="category-card">
+      <span class="category-emoji">💧</span>
+      <h3>Irrigation</h3>
+      <p>Drip kits, sprinklers, pumps & pipes</p>
+      <div class="category-count">300+ products</div>
+    </div>
+    <div class="category-card">
+      <span class="category-emoji">🔧</span>
+      <h3>Farm Tools</h3>
+      <p>Hand tools, sprayers, storage equipment</p>
+      <div class="category-count">500+ products</div>
+    </div>
+    <div class="category-card">
+      <span class="category-emoji">🧫</span>
+      <h3>Soil Health</h3>
+      <p>Testing kits, pH meters, conditioners</p>
+      <div class="category-count">150+ products</div>
+    </div>
+    <div class="category-card">
+      <span class="category-emoji">🌿</span>
+      <h3>Organic Farming</h3>
+      <p>Certified seeds, bio-fertilizers, compost</p>
+      <div class="category-count">400+ products</div>
+    </div>
+    <div class="category-card">
+      <span class="category-emoji">🐄</span>
+      <h3>Livestock</h3>
+      <p>Cattle feed, supplements, veterinary</p>
+      <div class="category-count">200+ products</div>
+    </div>
+  </div>
+</section>
+
+<!-- AI SECTION -->
+<section class="ai-section" id="ai">
+  <div class="ai-visual">
+    <div class="ai-card-main">
+      <div class="ai-chat-header">
+        <div class="ai-avatar">🤖</div>
+        <div>
+          <div class="ai-chat-name">Vriddhi AI Advisor</div>
+          <div class="ai-chat-status ai-online">Online now</div>
+        </div>
+      </div>
+      <div class="chat-bubble bubble-user">My tomato leaves are turning yellow. What's wrong?</div>
+      <div class="chat-bubble bubble-ai">
+        <strong>Likely nitrogen deficiency</strong> — yellowing starts from older/lower leaves. I recommend applying <strong>Urea @ 25kg/acre</strong> or a foliar spray of 2% Urea solution.<br><br>
+        🏪 <strong>Raju Agro Centre</strong> (1.2 km) has Urea in stock — ₹280/bag.
+      </div>
+      <div class="typing-indicator">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+    </div>
+
+    <div class="ai-floating-card ai-card-2">
+      <div class="ai-card-label">Soil Analysis Complete</div>
+      <div class="ai-card-value">pH 6.2 ✓</div>
+      <div class="ai-card-sub">Zinc deficient — supplement recommended</div>
+    </div>
+  </div>
+
+  <div class="ai-content">
+    <div class="section-label">Powered by AI</div>
+    <h2 class="section-title">Your 24/7 <em>farming</em> expert.</h2>
+    <p class="section-desc">12 AI tools built for Indian farmers — from disease diagnosis to profit forecasting, all in your local language.</p>
+
+    <ul class="ai-features-list">
+      <li class="ai-feature-item">
+        <div class="ai-feature-icon">📸</div>
+        <div class="ai-feature-text">
+          <h4>Crop Disease Identifier</h4>
+          <p>Photo your sick plant → instant diagnosis + treatment + nearest shop with medicine</p>
+        </div>
+      </li>
+      <li class="ai-feature-item">
+        <div class="ai-feature-icon">🌱</div>
+        <div class="ai-feature-text">
+          <h4>Seed Recommender</h4>
+          <p>Best seed varieties for your soil, season, water availability, and budget</p>
+        </div>
+      </li>
+      <li class="ai-feature-item">
+        <div class="ai-feature-icon">📄</div>
+        <div class="ai-feature-text">
+          <h4>Soil Report Analyzer</h4>
+          <p>Upload your soil test → get personalized fertilizer plan + crop suggestions</p>
+        </div>
+      </li>
+      <li class="ai-feature-item">
+        <div class="ai-feature-icon">💰</div>
+        <div class="ai-feature-text">
+          <h4>Profit Calculator</h4>
+          <p>Input cost + expected yield → profit forecast + best time to sell</p>
+        </div>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-it-works" id="how">
+  <div class="section-label" style="justify-content:center"><span>Simple Steps</span></div>
+  <h2 class="section-title">From field to doorstep <em>in minutes.</em></h2>
+
+  <div class="steps-grid">
+    <div class="step-item">
+      <div class="step-number">1</div>
+      <span class="step-emoji">📍</span>
+      <div class="step-title">Share your location</div>
+      <p class="step-desc">We find all verified shops near your farm with real-time stock data</p>
+    </div>
+    <div class="step-item">
+      <div class="step-number">2</div>
+      <span class="step-emoji">🔍</span>
+      <div class="step-title">Browse & compare</div>
+      <p class="step-desc">Compare prices, ratings, and availability across all nearby shops</p>
+    </div>
+    <div class="step-item">
+      <div class="step-number">3</div>
+      <span class="step-emoji">💬</span>
+      <div class="step-title">Chat & confirm</div>
+      <p class="step-desc">Chat directly with shop owner, get advice, and place your order</p>
+    </div>
+    <div class="step-item">
+      <div class="step-number">4</div>
+      <span class="step-emoji">🚚</span>
+      <div class="step-title">Delivered or pickup</div>
+      <p class="step-desc">Doorstep delivery or walk-in — your choice, tracked in real-time</p>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testimonials">
+  <div class="section-label">Farmer Stories</div>
+  <h2 class="section-title">Voices from the <em>field.</em></h2>
+
+  <div class="testimonials-grid">
+    <div class="testimonial-card">
+      <div class="stars">★★★★★</div>
+      <p class="quote-text">"Before Vriddhi, I wasted half a day going to 4 shops looking for the right seed. Now I check my phone and order in 5 minutes. My yield increased 30% this kharif."</p>
+      <div class="farmer-info">
+        <div class="farmer-avatar">👨‍🌾</div>
+        <div>
+          <div class="farmer-name">Ramesh Yadav</div>
+          <div class="farmer-location">Wheat farmer, Madhya Pradesh</div>
+        </div>
+      </div>
+      <div class="saving-badge">Saved ₹14,000 this season</div>
+    </div>
+
+    <div class="testimonial-card featured">
+      <div class="stars">★★★★★</div>
+      <p class="quote-text" style="color:var(--forest)">"The AI told me my soil needed zinc — I never knew that. Added it and my cotton yield went from 8 quintals to 12 quintals per acre. Vriddhi changed my life."</p>
+      <div class="farmer-info">
+        <div class="farmer-avatar">👩‍🌾</div>
+        <div>
+          <div class="farmer-name">Lakshmi Devi</div>
+          <div class="farmer-location">Cotton farmer, Telangana</div>
+        </div>
+      </div>
+      <div class="saving-badge">50% yield increase</div>
+    </div>
+
+    <div class="testimonial-card">
+      <div class="stars">★★★★★</div>
+      <p class="quote-text">"The mandi price predictor told me to wait 10 days before selling my tomatoes. I waited, got ₹800/quintal more. That's ₹40,000 extra just from listening to the app."</p>
+      <div class="farmer-info">
+        <div class="farmer-avatar">🧑‍🌾</div>
+        <div>
+          <div class="farmer-name">Suresh Patil</div>
+          <div class="farmer-location">Tomato farmer, Maharashtra</div>
+        </div>
+      </div>
+      <div class="saving-badge">₹40,000 extra income</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="cta-inner">
+    <div class="section-label">Join Vriddhi Today</div>
+    <h2 class="cta-title">Your best harvest<br><em>starts here.</em></h2>
+    <p class="cta-desc">Join 50,000+ farmers already using Vriddhi to save money, grow more, and access the best agri inputs near them — for free.</p>
+    <div class="cta-buttons">
+      <a href="#" class="btn-dark">🌾 Join as Farmer — Free</a>
+      <a href="#" class="btn-outline">🏪 Register Your Shop</a>
+    </div>
+    <p style="font-size:13px;color:var(--gray);margin-top:20px;">No credit card required • Works in Hindi, Telugu, Tamil & more</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-brand">
+      <span class="nav-logo-text" style="font-family:'Playfair Display',serif;color:white;">Vriddhi</span>
+      <div class="footer-tagline">"Grow More. Earn More. Live More."</div>
+      <p class="footer-desc">India's hyperlocal agri marketplace connecting farmers with verified suppliers, powered by AI.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Platform</h4>
+      <ul>
+        <li><a href="#">For Farmers</a></li>
+        <li><a href="#">For Shop Owners</a></li>
+        <li><a href="#">AI Tools</a></li>
+        <li><a href="#">Mandi Prices</a></li>
+        <li><a href="#">Govt Schemes</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="#">About Us</a></li>
+        <li><a href="#">Blog</a></li>
+        <li><a href="#">Careers</a></li>
+        <li><a href="#">Press Kit</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Support</h4>
+      <ul>
+        <li><a href="#">Help Center</a></li>
+        <li><a href="#">Farmer Helpline</a></li>
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Terms of Use</a></li>
+        <li><a href="#">Report Issue</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2025 Vriddhi Agri Marketplace Pvt. Ltd. All rights reserved.</span>
+    <div class="footer-langs">
+      <button class="lang-btn active">EN</button>
+      <button class="lang-btn">हिं</button>
+      <button class="lang-btn">తె</button>
+      <button class="lang-btn">தமி</button>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Custom cursor
+  const cursor = document.getElementById('cursor');
+  const cursorRing = document.getElementById('cursorRing');
+  let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
+
+  document.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX; mouseY = e.clientY;
+    cursor.style.left = mouseX + 'px';
+    cursor.style.top = mouseY + 'px';
+  });
+
+  function animateRing() {
+    ringX += (mouseX - ringX) * 0.12;
+    ringY += (mouseY - ringY) * 0.12;
+    cursorRing.style.left = ringX + 'px';
+    cursorRing.style.top = ringY + 'px';
+    requestAnimationFrame(animateRing);
+  }
+  animateRing();
+
+  document.querySelectorAll('a, button').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      cursor.style.width = '20px'; cursor.style.height = '20px';
+      cursorRing.style.width = '52px'; cursorRing.style.height = '52px';
+    });
+    el.addEventListener('mouseleave', () => {
+      cursor.style.width = '12px'; cursor.style.height = '12px';
+      cursorRing.style.width = '36px'; cursorRing.style.height = '36px';
+    });
+  });
+
+  // Navbar scroll
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 60);
+  });
+
+  // Generate particles
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 30; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.animationDuration = (8 + Math.random() * 16) + 's';
+    p.style.animationDelay = (Math.random() * 15) + 's';
+    p.style.width = p.style.height = (2 + Math.random() * 4) + 'px';
+    p.style.opacity = Math.random() * 0.6;
+    container.appendChild(p);
+  }
+
+  // Marquee content
+  const marqueeItems = [
+    '🌾 Seeds', '🧪 Fertilizers', '🐛 Pesticides', '💧 Irrigation',
+    '🔧 Farm Tools', '🌿 Organic', '🤖 AI Advisor', '📊 Mandi Prices',
+    '🏛️ Govt Schemes', '💬 Farmer Chat', '📅 Crop Calendar', '🌦️ Weather Alerts'
+  ];
+  const track = document.getElementById('marquee');
+  const allItems = [...marqueeItems, ...marqueeItems, ...marqueeItems];
+  track.innerHTML = allItems.map(item =>
+    `<span class="marquee-item"><span class="marquee-dot"></span>${item}</span>`
+  ).join('');
+
+  // Language buttons
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+
+  // Scroll reveal
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.feature-card, .category-card, .testimonial-card, .step-item, .ai-feature-item').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(24px)';
+    el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+    observer.observe(el);
+  });
+</script>
+</body>
+</html>
