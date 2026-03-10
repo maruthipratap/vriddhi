@@ -281,4 +281,8 @@ function sanitizeUser(user) {
   delete obj.passwordResetToken
   delete obj.passwordResetExpiry
   delete obj.emailVerifyToken
-  delete obj.emailVerif
+  delete obj.emailVerifyExpiry
+  return obj
+}
+
+export default authService
