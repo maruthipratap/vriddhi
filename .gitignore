@@ -34,3 +34,5 @@ server/uploads/
 
 # Cache
 .cache/
+
+server/keys/
