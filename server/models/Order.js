@@ -36,7 +36,7 @@ const orderSchema = new mongoose.Schema(
     // Human readable order number
     orderNumber: {
       type:   String,
-      unique: true,
+      //unique: true,
     },
 
     farmerId: {
@@ -99,7 +99,7 @@ const orderSchema = new mongoose.Schema(
     },
 
     // Razorpay fields
-    razorpayOrderId:   { type: String, default: null, sparse: true },
+    razorpayOrderId:   { type: String, default: null },
     razorpayPaymentId: { type: String, default: null },
 
     deliveryType: {

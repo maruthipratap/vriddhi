@@ -14,6 +14,9 @@ import { errorHandler, notFound }    from './middleware/error.middleware.js'
 import shopRoutes                    from './routes/shop.routes.js'
 import productRoutes                 from './routes/product.routes.js'
 import orderRoutes                   from './routes/order.routes.js'
+import http                          from 'http'
+import { initSocket }                from './config/socket.js'
+import chatRoutes                    from './routes/chat.routes.js'
 
 // ─────────────────────────────────────────────────────────────
 // APP SETUP
@@ -85,6 +88,7 @@ app.use('/api/v1/auth', authLimiter, authRoutes)
 app.use('/api/v1/shops',    shopRoutes)
 app.use('/api/v1/products', productRoutes)
 app.use('/api/v1/orders', orderRoutes)
+app.use('/api/v1/chats', chatRoutes)
 
 // ── 404 + Error handlers (must be last) ──────────────────────
 app.use(notFound)
@@ -95,13 +99,22 @@ app.use(errorHandler)
 // ─────────────────────────────────────────────────────────────
 async function startServer() {
   try {
-    // Connect to DB and Redis before accepting requests
     await connectDB()
     await connectRedis()
 
-    app.listen(config.port, () => {
+    // Create HTTP server — needed for Socket.io
+    const httpServer = http.createServer(app)
+
+    // Init Socket.io
+    const io = initSocket(httpServer)
+
+    // Make io available to routes if needed
+    app.set('io', io)
+
+    httpServer.listen(config.port, () => {
       console.log(`\n🌾 Vriddhi API running on port ${config.port}`)
       console.log(`📍 Environment: ${config.env}`)
+      console.log(`🔌 Socket.io ready`)
       console.log(`🔗 Health: http://localhost:${config.port}/health\n`)
     })
 

@@ -47,7 +47,7 @@ const shopSchema = new mongoose.Schema(
       type:     mongoose.Schema.Types.ObjectId,
       ref:      'User',
       required: true,
-      unique:   true,   // one shop per user
+      //unique:   true,   // one shop per user
     },
 
     shopName: {
@@ -58,7 +58,7 @@ const shopSchema = new mongoose.Schema(
 
     slug: {
       type:   String,
-      unique: true,
+      //unique: true,
     },
 
     description: {
