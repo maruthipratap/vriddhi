@@ -17,6 +17,7 @@ import orderRoutes                   from './routes/order.routes.js'
 import http                          from 'http'
 import { initSocket }                from './config/socket.js'
 import chatRoutes                    from './routes/chat.routes.js'
+import aiRoutes                      from './routes/ai.routes.js'
 
 // ─────────────────────────────────────────────────────────────
 // APP SETUP
@@ -89,6 +90,7 @@ app.use('/api/v1/shops',    shopRoutes)
 app.use('/api/v1/products', productRoutes)
 app.use('/api/v1/orders', orderRoutes)
 app.use('/api/v1/chats', chatRoutes)
+app.use('/api/v1/ai', aiRoutes)
 
 // ── 404 + Error handlers (must be last) ──────────────────────
 app.use(notFound)
