@@ -112,10 +112,8 @@ export async function getNearbyProducts(req, res, next) {
     }
 
     // Step 1: find nearby SHOPS (small collection — fast)
-    const { shopRepository: shopRepo } = await import(
-      '../repositories/shop.repository.js'
-    )
-    const nearbyShops = await shopRepo.findNearby({
+    
+    const nearbyShops = await shopRepository.findNearby({
       lat:      parseFloat(lat),
       lng:      parseFloat(lng),
       radiusKm: parseFloat(radius),
