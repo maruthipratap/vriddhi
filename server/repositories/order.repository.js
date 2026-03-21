@@ -1,0 +1,95 @@
+import Order from '../models/Order.js'
+
+const orderRepository = {
+
+  async create(data) {
+    return Order.create(data)
+  },
+
+  async findById(id) {
+    return Order.findById(id)
+  },
+
+  // BOLA check — always scope to farmerId
+  async findByIdAndFarmer(orderId, farmerId) {
+    return Order.findOne({ _id: orderId, farmerId })
+  },
+
+  async findByIdAndShop(orderId, shopId) {
+    return Order.findOne({ _id: orderId, shopId })
+  },
+
+  async findByFarmer(farmerId, filters = {}) {
+    return Order.find({ farmerId, ...filters })
+      .sort({ createdAt: -1 })
+      .limit(50)
+  },
+
+  async findByShop(shopId, filters = {}) {
+    return Order.find({ shopId, ...filters })
+      .sort({ createdAt: -1 })
+      .limit(50)
+  },
+
+  async findByRazorpayOrderId(razorpayOrderId) {
+    return Order.findOne({ razorpayOrderId })
+  },
+
+  async updateStatus(orderId, status, note, updatedBy) {
+    return Order.findByIdAndUpdate(
+      orderId,
+      {
+        $set:  { status },
+        $push: {
+          timeline: { status, note, updatedBy, timestamp: new Date() }
+        },
+      },
+      { new: true }
+    )
+  },
+
+  async updatePaymentStatus(orderId, paymentStatus, razorpayPaymentId) {
+    return Order.findByIdAndUpdate(
+      orderId,
+      {
+        $set: {
+          paymentStatus,
+          razorpayPaymentId,
+          // Auto confirm order when payment received
+          ...(paymentStatus === 'paid' && { status: 'confirmed' }),
+        },
+        $push: {
+          timeline: {
+            status:    paymentStatus === 'paid' ? 'confirmed' : 'payment_failed',
+            note:      `Payment ${paymentStatus}`,
+            timestamp: new Date(),
+          }
+        },
+      },
+      { new: true }
+    )
+  },
+
+  async cancelOrder(orderId, cancelledBy, reason) {
+    return Order.findByIdAndUpdate(
+      orderId,
+      {
+        $set: {
+          status:       'cancelled',
+          cancelReason: reason,
+          cancelledBy,
+        },
+        $push: {
+          timeline: {
+            status:    'cancelled',
+            note:      reason,
+            timestamp: new Date(),
+          }
+        },
+      },
+      { new: true }
+    )
+  },
+}
+
+export default orderRepository

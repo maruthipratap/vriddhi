@@ -1,0 +1,160 @@
+import orderService from '../services/order.service.js'
+import shopRepository from '../repositories/shop.repository.js'
+import {
+  createOrderSchema,
+  verifyPaymentSchema,
+} from '../models/Order.js'
+
+// ── Create order ──────────────────────────────────────────────
+export async function createOrder(req, res, next) {
+  try {
+    const validated = createOrderSchema.parse(req.body)
+
+    const { order, razorpayOrder } = await orderService.createOrder({
+      farmerId: req.user.id,
+      ...validated,
+    })
+
+    res.status(201).json({
+      success: true,
+      message: 'Order placed successfully',
+      data: {
+        order,
+        razorpayOrder,  // frontend uses this to open Razorpay checkout
+      },
+    })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// ── Verify payment ────────────────────────────────────────────
+export async function verifyPayment(req, res, next) {
+  try {
+    const validated = verifyPaymentSchema.parse(req.body)
+    const result    = await orderService.verifyPayment(validated)
+
+    res.status(200).json({
+      success: true,
+      message: result.message,
+      data:    { order: result.order },
+    })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// ── Get my orders (farmer) ────────────────────────────────────
+export async function getMyOrders(req, res, next) {
+  try {
+    const orders = await orderService.getFarmerOrders(req.user.id)
+    res.status(200).json({
+      success: true,
+      data: { orders, count: orders.length },
+    })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// ── Get single order ──────────────────────────────────────────
+export async function getOrder(req, res, next) {
+  try {
+    const order = await orderService.getOrder(
+      req.params.id,
+      req.user.id,
+      req.user.role,
+    )
+    res.status(200).json({
+      success: true,
+      data: { order },
+    })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// ── Get shop orders (shop owner) ──────────────────────────────
+export async function getShopOrders(req, res, next) {
+  try {
+    const shop = await shopRepository.findByUserId(req.user.id)
+    if (!shop) {
+      return res.status(404).json({
+        success: false,
+        message: 'Shop not found',
+        code:    'SHOP_NOT_FOUND',
+      })
+    }
+
+    const { status } = req.query
+    const filters    = status ? { status } : {}
+    const orders     = await orderService
+      .getFarmerOrders(shop._id, filters)
+
+    res.status(200).json({
+      success: true,
+      data: { orders, count: orders.length },
+    })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// ── Update order status (shop owner) ─────────────────────────
+export async function updateOrderStatus(req, res, next) {
+  try {
+    const shop = await shopRepository.findByUserId(req.user.id)
+    if (!shop) {
+      return res.status(404).json({
+        success: false,
+        message: 'Shop not found',
+        code:    'SHOP_NOT_FOUND',
+      })
+    }
+
+    const { status, note } = req.body
+    if (!status) {
+      return res.status(400).json({
+        success: false,
+        message: 'Status is required',
+      })
+    }
+
+    const order = await orderService.updateOrderStatus(
+      req.params.id,
+      shop._id,
+      status,
+      note || `Status updated to ${status}`,
+      req.user.id,
+    )
+
+    res.status(200).json({
+      success: true,
+      message: `Order ${status} successfully`,
+      data:    { order },
+    })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// ── Cancel order ──────────────────────────────────────────────
+export async function cancelOrder(req, res, next) {
+  try {
+    const { reason } = req.body
+    const order = await orderService.cancelOrder(
+      req.params.id,
+      req.user.id,
+      req.user.role,
+      reason || 'Cancelled by user',
+    )
+
+    res.status(200).json({
+      success: true,
+      message: 'Order cancelled successfully',
+      data:    { order },
+    })
+  } catch (err) {
+    next(err)
+  }
+}
