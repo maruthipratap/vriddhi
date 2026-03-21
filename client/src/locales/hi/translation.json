@@ -1,0 +1,89 @@
+{
+  "app": {
+    "name": "वृद्धि",
+    "tagline": "अधिक उगाएं। अधिक कमाएं। बेहतर जीएं।"
+  },
+  "nav": {
+    "home": "होम",
+    "browse": "ब्राउज़",
+    "orders": "ऑर्डर",
+    "chat": "चैट",
+    "ai": "एआई"
+  },
+  "auth": {
+    "login": "लॉगिन",
+    "register": "रजिस्टर",
+    "logout": "लॉगआउट",
+    "email_phone": "ईमेल या फोन",
+    "password": "पासवर्ड",
+    "full_name": "पूरा नाम",
+    "welcome_back": "वापस स्वागत है 👋",
+    "create_account": "खाता बनाएं 🚀"
+  },
+  "home": {
+    "good_morning": "सुप्रभात 🌅",
+    "good_afternoon": "नमस्कार ☀️",
+    "good_evening": "शुभ संध्या 🌙",
+    "hello": "नमस्ते",
+    "shops_nearby": "पास की दुकानें",
+    "products_available": "उत्पाद उपलब्ध",
+    "search_placeholder": "बीज, खाद खोजें...",
+    "ai_advisor": "एआई सलाहकार",
+    "seed_advice": "बीज सलाह",
+    "cost_calculator": "लागत कैलकुलेटर",
+    "shop_by_category": "श्रेणी के अनुसार खरीदें",
+    "nearby_shops": "पास की दुकानें",
+    "products_near_you": "आपके पास उत्पाद"
+  },
+  "categories": {
+    "seeds": "बीज",
+    "fertilizers": "खाद",
+    "pesticides": "कीटनाशक",
+    "tools": "उपकरण",
+    "irrigation": "सिंचाई",
+    "organic": "जैविक"
+  },
+  "product": {
+    "add_to_cart": "कार्ट में जोड़ें",
+    "added": "जोड़ा गया!",
+    "out_of_stock": "स्टॉक में नहीं",
+    "organic": "जैविक",
+    "hybrid": "हाइब्रिड",
+    "in_stock": "स्टॉक में है",
+    "quantity": "मात्रा",
+    "total": "कुल"
+  },
+  "cart": {
+    "title": "आपकी कार्ट 🛒",
+    "empty": "कार्ट खाली है",
+    "place_order": "ऑर्डर करें",
+    "order_summary": "ऑर्डर सारांश"
+  },
+  "orders": {
+    "title": "मेरे ऑर्डर 📦",
+    "no_orders": "अभी तक कोई ऑर्डर नहीं",
+    "status": {
+      "pending": "लंबित",
+      "confirmed": "पुष्टि हुई",
+      "delivered": "डिलीवर हो गया",
+      "cancelled": "रद्द"
+    }
+  },
+  "chat": {
+    "title": "संदेश 💬",
+    "type_message": "संदेश लिखें..."
+  },
+  "ai": {
+    "seed_recommender": "बीज सलाहकार",
+    "get_recommendations": "सिफारिशें प्राप्त करें",
+    "cost_calculator": "लागत कैलकुलेटर",
+    "calculate_profit": "लाभ की गणना करें"
+  },
+  "common": {
+    "loading": "लोड हो रहा है...",
+    "error": "कुछ गलत हुआ",
+    "save": "सहेजें",
+    "cancel": "रद्द करें",
+    "back": "वापस"
+  }
+}

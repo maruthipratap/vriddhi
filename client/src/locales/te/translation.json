@@ -1,0 +1,87 @@
+{
+  "app": {
+    "name": "వృద్ధి",
+    "tagline": "ఎక్కువ పండించండి. ఎక్కువ సంపాదించండి. మెరుగ్గా జీవించండి."
+  },
+  "nav": {
+    "home": "హోమ్",
+    "browse": "బ్రౌజ్",
+    "orders": "ఆర్డర్లు",
+    "chat": "చాట్",
+    "ai": "ఏఐ"
+  },
+  "auth": {
+    "login": "లాగిన్",
+    "register": "నమోదు",
+    "logout": "లాగ్అవుట్",
+    "email_phone": "ఇమెయిల్ లేదా ఫోన్",
+    "password": "పాస్వర్డ్",
+    "full_name": "పూర్తి పేరు",
+    "welcome_back": "మళ్ళీ స్వాగతం 👋",
+    "create_account": "ఖాతా తెరవండి 🚀"
+  },
+  "home": {
+    "good_morning": "శుభోదయం 🌅",
+    "good_afternoon": "నమస్కారం ☀️",
+    "good_evening": "శుభ సాయంత్రం 🌙",
+    "hello": "నమస్కారం",
+    "shops_nearby": "దగ్గరలో దుకాణాలు",
+    "products_available": "ఉత్పత్తులు అందుబాటులో",
+    "search_placeholder": "విత్తనాలు, ఎరువులు వెతకండి...",
+    "ai_advisor": "ఏఐ సలహాదారు",
+    "seed_advice": "విత్తన సలహా",
+    "cost_calculator": "ఖర్చు లెక్కింపు",
+    "shop_by_category": "వర్గం ప్రకారం కొనండి",
+    "nearby_shops": "దగ్గరలో దుకాణాలు",
+    "products_near_you": "మీ దగ్గర ఉత్పత్తులు"
+  },
+  "categories": {
+    "seeds": "విత్తనాలు",
+    "fertilizers": "ఎరువులు",
+    "pesticides": "పురుగుమందులు",
+    "tools": "పనిముట్లు",
+    "irrigation": "నీటిపారుదల",
+    "organic": "సేంద్రీయ"
+  },
+  "product": {
+    "add_to_cart": "కార్ట్‌కు జోడించు",
+    "added": "జోడించబడింది!",
+    "out_of_stock": "స్టాక్ లేదు",
+    "in_stock": "స్టాక్‌లో ఉంది",
+    "quantity": "పరిమాణం",
+    "total": "మొత్తం"
+  },
+  "cart": {
+    "title": "మీ కార్ట్ 🛒",
+    "empty": "కార్ట్ ఖాళీగా ఉంది",
+    "place_order": "ఆర్డర్ చేయండి",
+    "order_summary": "ఆర్డర్ సారాంశం"
+  },
+  "orders": {
+    "title": "నా ఆర్డర్లు 📦",
+    "no_orders": "ఇంకా ఆర్డర్లు లేవు",
+    "status": {
+      "pending": "పెండింగ్",
+      "confirmed": "నిర్ధారించబడింది",
+      "delivered": "డెలివరీ అయింది",
+      "cancelled": "రద్దు చేయబడింది"
+    }
+  },
+  "chat": {
+    "title": "సందేశాలు 💬",
+    "type_message": "సందేశం టైప్ చేయండి..."
+  },
+  "ai": {
+    "seed_recommender": "విత్తన సూచికుడు",
+    "get_recommendations": "సిఫారసులు పొందండి",
+    "cost_calculator": "ఖర్చు లెక్కింపు",
+    "calculate_profit": "లాభం లెక్కించు"
+  },
+  "common": {
+    "loading": "లోడ్ అవుతోంది...",
+    "error": "ఏదో తప్పు జరిగింది",
+    "save": "సేవ్",
+    "cancel": "రద్దు",
+    "back": "వెనుకకు"
+  }
+}
