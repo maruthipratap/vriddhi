@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useSelector }  from 'react-redux'
-import { useEffect }    from 'react'
+import { useEffect, useState } from 'react'
 import { useDispatch }  from 'react-redux'
 import { refreshToken } from './store/slices/authSlice.js'
 import { useSocket }    from './hooks/useSocket.js'
@@ -24,14 +24,18 @@ import Loader       from './components/common/Loader.jsx'
 
 function PrivateRoute({ children, roles }) {
   const { user, accessToken } = useSelector(s => s.auth)
+
   if (!accessToken) return <Navigate to="/login" replace />
   if (roles && !roles.includes(user?.role)) return <Navigate to="/" replace />
+
   return children
 }
 
 function App() {
   const dispatch   = useDispatch()
-  const { accessToken, isInitialized } = useSelector(s => s.auth)
+  const { accessToken } = useSelector(s => s.auth)
+
+  const [initialized, setInitialized] = useState(false) // ✅ local safe state
 
   // Connect Socket.io when logged in
   useSocket(accessToken)
@@ -39,14 +43,16 @@ function App() {
   // Try to refresh token on app load
   useEffect(() => {
     dispatch(refreshToken())
-  }, [])
+      .finally(() => setInitialized(true)) // ✅ ALWAYS finish (fix)
+  }, [dispatch])
 
-  if (!isInitialized) return <Loader />
+  if (!initialized) return <Loader />
 
   return (
     <BrowserRouter>
       <div className="min-h-screen bg-cream">
         {accessToken && <Navbar />}
+
         <Routes>
           {/* Auth */}
           <Route path="/login"    element={<Login    />} />

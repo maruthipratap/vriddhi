@@ -65,7 +65,7 @@ app.use(globalLimiter)
 // Strict limiter for auth routes
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max:      10,                 // 10 attempts per 15 min
+  max:      100,                 // 10 attempts per 15 min
   skipSuccessfulRequests: true, // only count failures
   message: {
     success: false,
