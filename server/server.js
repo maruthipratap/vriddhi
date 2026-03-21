@@ -11,6 +11,8 @@ import { connectDB }                 from './config/db.js'
 import { connectRedis }              from './config/redis.js'
 import authRoutes                    from './routes/auth.routes.js'
 import { errorHandler, notFound }    from './middleware/error.middleware.js'
+import shopRoutes    from './routes/shop.routes.js'
+import productRoutes from './routes/product.routes.js'
 
 // ─────────────────────────────────────────────────────────────
 // APP SETUP
@@ -79,6 +81,8 @@ app.get('/health', (req, res) => {
 
 // ── Routes ────────────────────────────────────────────────────
 app.use('/api/v1/auth', authLimiter, authRoutes)
+app.use('/api/v1/shops',    shopRoutes)
+app.use('/api/v1/products', productRoutes)
 
 // ── 404 + Error handlers (must be last) ──────────────────────
 app.use(notFound)
