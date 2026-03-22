@@ -31,7 +31,9 @@ export default function LandingNavbar() {
         {/* Logo */}
         <a href="/" className="flex items-center gap-2">
           <span className="text-2xl">🌱</span>
-          <span className="font-heading text-xl font-bold text-primary">
+          <span className={`font-heading text-xl font-bold transition-colors ${
+            scrolled ? 'text-primary' : 'text-white'
+          }`}>
             Vriddhi
           </span>
         </a>
