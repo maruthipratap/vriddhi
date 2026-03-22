@@ -1,3 +1,12 @@
+// ─────────────────────────────────────────────────────────────
+// ENV CONFIG (MUST BE FIRST)
+// ─────────────────────────────────────────────────────────────
+import dotenv from 'dotenv'
+dotenv.config()
+
+// ─────────────────────────────────────────────────────────────
+// IMPORTS
+// ─────────────────────────────────────────────────────────────
 import express        from 'express'
 import cors           from 'cors'
 import helmet         from 'helmet'
@@ -31,11 +40,11 @@ app.disable('x-powered-by')
 // ── CORS ──────────────────────────────────────────────────────
 app.use(cors({
   origin: [
-    'http://localhost:5173',    // Vite dev server
-    'https://vriddhi.in',       // production
-  ],
-  credentials: true,            // allow cookies
-  methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
+    'http://localhost:5173',
+    'https://vriddhi.vercel.app',
+    process.env.FRONTEND_URL,
+  ].filter(Boolean),
+  credentials: true,
 }))
 
 // ── Body parsing ──────────────────────────────────────────────

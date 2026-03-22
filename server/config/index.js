@@ -16,13 +16,21 @@ function optional(key, fallback) {
 
 // ── Load RS256 keys ───────────────────────────────────────────
 let privateKey, publicKey
-try {
-  privateKey = readFileSync(resolve('keys/private.pem'), 'utf8')
-  publicKey  = readFileSync(resolve('keys/public.pem'),  'utf8')
-} catch {
-  throw new Error(
-    '❌ RS256 keys not found in keys/ folder. Run the keygen step again.'
-  )
+
+if (process.env.JWT_PRIVATE_KEY) {
+  // Production — from environment variables
+  privateKey = process.env.JWT_PRIVATE_KEY.replace(/\\n/g, '\n')
+  publicKey  = process.env.JWT_PUBLIC_KEY.replace(/\\n/g, '\n')
+} else {
+  // Development — from files
+  try {
+    const { readFileSync } = await import('fs')
+    const { resolve }      = await import('path')
+    privateKey = readFileSync(resolve('keys/private.pem'), 'utf8')
+    publicKey  = readFileSync(resolve('keys/public.pem'),  'utf8')
+  } catch {
+    throw new Error('RS256 keys not found. Run keygen or set JWT_PRIVATE_KEY env var.')
+  }
 }
 
 // ── Config object ─────────────────────────────────────────────
