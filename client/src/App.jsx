@@ -1,150 +1,215 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { useSelector }  from 'react-redux'
-import { useEffect, useState } from 'react'
-import { useDispatch }  from 'react-redux'
-import { refreshToken } from './store/slices/authSlice.js'
-import { useSocket }    from './hooks/useSocket.js'
+import { useSelector, useDispatch }               from 'react-redux'
+import { useEffect, useState }                    from 'react'
+import { refreshToken }                           from './store/slices/authSlice.js'
+import { useSocket }                              from './hooks/useSocket.js'
 
-// Pages
-import Login        from './pages/auth/Login.jsx'
-import Register     from './pages/auth/Register.jsx'
-import Home         from './pages/farmer/Home.jsx'
-import Browse       from './pages/farmer/Browse.jsx'
-import ProductDetail from './pages/farmer/ProductDetail.jsx'
-import Cart         from './pages/farmer/Cart.jsx'
-import Orders       from './pages/farmer/Orders.jsx'
-import ChatList     from './pages/chat/ChatList.jsx'
-import ChatRoom     from './pages/chat/ChatRoom.jsx'
-import SeedRecommender from './pages/ai/SeedRecommender.jsx'
-import CostCalculator  from './pages/ai/CostCalculator.jsx'
+// Landing
+import LandingPage      from './pages/landing/LandingPage.jsx'
 
-// ✅ New Pages
+// Auth
+import AuthPage         from './pages/auth/AuthPage.jsx'
+
+// Dashboard Layout
+import DashboardNavbar  from './components/common/DashboardNavbar.jsx'
+import Loader           from './components/common/Loader.jsx'
+
+// Farmer pages
+import Home             from './pages/farmer/Home.jsx'
+import Browse           from './pages/farmer/Browse.jsx'
+import ProductDetail    from './pages/farmer/ProductDetail.jsx'
+import Cart             from './pages/farmer/Cart.jsx'
+import Orders           from './pages/farmer/Orders.jsx'
+import CropCalendar     from './pages/farmer/CropCalendar.jsx'
+import Forum            from './pages/farmer/Forum.jsx'
+import MandiPrices      from './pages/farmer/MandiPrices.jsx'
+
+// Chat
+import ChatList         from './pages/chat/ChatList.jsx'
+import ChatRoom         from './pages/chat/ChatRoom.jsx'
+
+// AI
+import SeedRecommender  from './pages/ai/SeedRecommender.jsx'
+import CostCalculator   from './pages/ai/CostCalculator.jsx'
 import FertilizerAdvisor from './pages/ai/FertilizerAdvisor.jsx'
-import SchemeChecker     from './pages/ai/SchemeChecker.jsx'
-import CropCalendar      from './pages/farmer/CropCalendar.jsx'
-import Forum             from './pages/farmer/Forum.jsx'
-import MandiPrices       from './pages/farmer/MandiPrices.jsx'
-import ShopDashboard     from './pages/shop/Dashboard.jsx'
-import Inventory         from './pages/shop/Inventory.jsx'
-import ShopOrders        from './pages/shop/ShopOrders.jsx'
-import AdminDashboard    from './pages/admin/Dashboard.jsx'
-import Verifications     from './pages/admin/Verifications.jsx'
+import SchemeChecker    from './pages/ai/SchemeChecker.jsx'
 
-// Components
-import Navbar       from './components/common/Navbar.jsx'
-import Loader       from './components/common/Loader.jsx'
+// Shop
+import ShopDashboard    from './pages/shop/Dashboard.jsx'
+import Inventory        from './pages/shop/Inventory.jsx'
+import ShopOrders       from './pages/shop/ShopOrders.jsx'
 
-function PrivateRoute({ children, roles }) {
-  const { user, accessToken } = useSelector(s => s.auth)
+// Admin
+import AdminDashboard   from './pages/admin/Dashboard.jsx'
+import Verifications    from './pages/admin/Verifications.jsx'
 
-  if (!accessToken) return <Navigate to="/login" replace />
-  if (roles && !roles.includes(user?.role)) return <Navigate to="/" replace />
-
+// ── Route guards ──────────────────────────────────────────────
+function PrivateRoute({ children }) {
+  const { accessToken } = useSelector(s => s.auth)
+  if (!accessToken) return <Navigate to="/auth" replace />
   return children
 }
 
-function App() {
-  const dispatch   = useDispatch()
+function PublicOnlyRoute({ children }) {
   const { accessToken } = useSelector(s => s.auth)
+  if (accessToken) return <Navigate to="/home" replace />
+  return children
+}
 
-  const [initialized, setInitialized] = useState(false) // ✅ local safe state
+// ── Dashboard layout wrapper ──────────────────────────────────
+function DashboardLayout({ children }) {
+  return (
+    <>
+      <DashboardNavbar />
+      <main>{children}</main>
+    </>
+  )
+}
+
+// ── Main App ──────────────────────────────────────────────────
+export default function App() {
+  const dispatch                   = useDispatch()
+  const { accessToken }            = useSelector(s => s.auth)
+  const [initialized, setInit]     = useState(false)
 
   // Connect Socket.io when logged in
   useSocket(accessToken)
 
-  // Try to refresh token on app load
+  // Try to restore session on load
   useEffect(() => {
-    dispatch(refreshToken())
-      .finally(() => setInitialized(true)) // ✅ ALWAYS finish (fix)
-  }, [dispatch])
+    dispatch(refreshToken()).finally(() => setInit(true))
+  }, [])
 
   if (!initialized) return <Loader />
 
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-cream">
-        {accessToken && <Navbar />}
+      <Routes>
+        {/* ── PUBLIC: Landing page ── */}
+        <Route path="/" element={
+          <PublicOnlyRoute><LandingPage /></PublicOnlyRoute>
+        }/>
 
-        <Routes>
-          {/* Auth */}
-          <Route path="/login"    element={<Login    />} />
-          <Route path="/register" element={<Register />} />
+        {/* ── PUBLIC: Auth ── */}
+        <Route path="/auth" element={
+          <PublicOnlyRoute><AuthPage /></PublicOnlyRoute>
+        }/>
 
-          {/* Farmer */}
-          <Route path="/" element={
-            <PrivateRoute><Home /></PrivateRoute>
-          }/>
-          <Route path="/browse" element={
-            <PrivateRoute><Browse /></PrivateRoute>
-          }/>
-          <Route path="/products/:id" element={
-            <PrivateRoute><ProductDetail /></PrivateRoute>
-          }/>
-          <Route path="/cart" element={
-            <PrivateRoute><Cart /></PrivateRoute>
-          }/>
-          <Route path="/orders" element={
-            <PrivateRoute><Orders /></PrivateRoute>
-          }/>
+        {/* ── PRIVATE: Dashboard routes ── */}
+        <Route path="/home" element={
+          <PrivateRoute>
+            <DashboardLayout><Home /></DashboardLayout>
+          </PrivateRoute>
+        }/>
 
-          {/* Chat */}
-          <Route path="/chats" element={
-            <PrivateRoute><ChatList /></PrivateRoute>
-          }/>
-          <Route path="/chats/:chatId" element={
-            <PrivateRoute><ChatRoom /></PrivateRoute>
-          }/>
+        <Route path="/browse" element={
+          <PrivateRoute>
+            <DashboardLayout><Browse /></DashboardLayout>
+          </PrivateRoute>
+        }/>
 
-          {/* AI */}
-          <Route path="/ai/seeds" element={
-            <PrivateRoute><SeedRecommender /></PrivateRoute>
-          }/>
-          <Route path="/ai/calculator" element={
-            <PrivateRoute><CostCalculator /></PrivateRoute>
-          }/>
-          <Route path="/ai/fertilizer" element={
-            <PrivateRoute><FertilizerAdvisor /></PrivateRoute>
-          }/>
-          <Route path="/ai/schemes" element={
-            <PrivateRoute><SchemeChecker /></PrivateRoute>
-          }/>
+        <Route path="/products/:id" element={
+          <PrivateRoute>
+            <DashboardLayout><ProductDetail /></DashboardLayout>
+          </PrivateRoute>
+        }/>
 
-          {/* Extra Farmer Features */}
-          <Route path="/calendar" element={
-            <PrivateRoute><CropCalendar /></PrivateRoute>
-          }/>
-          <Route path="/forum" element={
-            <PrivateRoute><Forum /></PrivateRoute>
-          }/>
-          <Route path="/mandi" element={
-            <PrivateRoute><MandiPrices /></PrivateRoute>
-          }/>
+        <Route path="/cart" element={
+          <PrivateRoute>
+            <DashboardLayout><Cart /></DashboardLayout>
+          </PrivateRoute>
+        }/>
 
-          {/* Shop */}
-          <Route path="/shop/dashboard" element={
-            <PrivateRoute><ShopDashboard /></PrivateRoute>
-          }/>
-          <Route path="/shop/inventory" element={
-            <PrivateRoute><Inventory /></PrivateRoute>
-          }/>
-          <Route path="/shop/orders" element={
-            <PrivateRoute><ShopOrders /></PrivateRoute>
-          }/>
+        <Route path="/orders" element={
+          <PrivateRoute>
+            <DashboardLayout><Orders /></DashboardLayout>
+          </PrivateRoute>
+        }/>
 
-          {/* Admin */}
-          <Route path="/admin" element={
-            <PrivateRoute><AdminDashboard /></PrivateRoute>
-          }/>
-          <Route path="/admin/verify" element={
-            <PrivateRoute><Verifications /></PrivateRoute>
-          }/>
+        <Route path="/chats" element={
+          <PrivateRoute>
+            <DashboardLayout><ChatList /></DashboardLayout>
+          </PrivateRoute>
+        }/>
 
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </div>
+        <Route path="/chats/:chatId" element={
+          <PrivateRoute>
+            <DashboardLayout><ChatRoom /></DashboardLayout>
+          </PrivateRoute>
+        }/>
+
+        <Route path="/calendar" element={
+          <PrivateRoute>
+            <DashboardLayout><CropCalendar /></DashboardLayout>
+          </PrivateRoute>
+        }/>
+
+        <Route path="/forum" element={
+          <PrivateRoute>
+            <DashboardLayout><Forum /></DashboardLayout>
+          </PrivateRoute>
+        }/>
+
+        <Route path="/mandi" element={
+          <PrivateRoute>
+            <DashboardLayout><MandiPrices /></DashboardLayout>
+          </PrivateRoute>
+        }/>
+
+        {/* AI routes */}
+        <Route path="/ai/seeds" element={
+          <PrivateRoute>
+            <DashboardLayout><SeedRecommender /></DashboardLayout>
+          </PrivateRoute>
+        }/>
+        <Route path="/ai/calculator" element={
+          <PrivateRoute>
+            <DashboardLayout><CostCalculator /></DashboardLayout>
+          </PrivateRoute>
+        }/>
+        <Route path="/ai/fertilizer" element={
+          <PrivateRoute>
+            <DashboardLayout><FertilizerAdvisor /></DashboardLayout>
+          </PrivateRoute>
+        }/>
+        <Route path="/ai/schemes" element={
+          <PrivateRoute>
+            <DashboardLayout><SchemeChecker /></DashboardLayout>
+          </PrivateRoute>
+        }/>
+
+        {/* Shop routes */}
+        <Route path="/shop/dashboard" element={
+          <PrivateRoute>
+            <DashboardLayout><ShopDashboard /></DashboardLayout>
+          </PrivateRoute>
+        }/>
+        <Route path="/shop/inventory" element={
+          <PrivateRoute>
+            <DashboardLayout><Inventory /></DashboardLayout>
+          </PrivateRoute>
+        }/>
+        <Route path="/shop/orders" element={
+          <PrivateRoute>
+            <DashboardLayout><ShopOrders /></DashboardLayout>
+          </PrivateRoute>
+        }/>
+
+        {/* Admin routes */}
+        <Route path="/admin" element={
+          <PrivateRoute>
+            <DashboardLayout><AdminDashboard /></DashboardLayout>
+          </PrivateRoute>
+        }/>
+        <Route path="/admin/verify" element={
+          <PrivateRoute>
+            <DashboardLayout><Verifications /></DashboardLayout>
+          </PrivateRoute>
+        }/>
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </BrowserRouter>
   )
 }
-
-export default App

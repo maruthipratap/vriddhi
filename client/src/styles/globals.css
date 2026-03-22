@@ -1,56 +1,166 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --background: 60 33% 97%;
+    --foreground: 240 3% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 3% 11%;
+    --primary: 123 55% 24%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 125 52% 93%;
+    --secondary-foreground: 123 55% 24%;
+    --muted: 125 30% 94%;
+    --muted-foreground: 0 0% 40%;
+    --accent: 43 95% 56%;
+    --accent-foreground: 240 3% 11%;
+    --destructive: 0 70% 40%;
+    --border: 125 52% 88%;
+    --input: 125 52% 93%;
+    --ring: 123 55% 24%;
+    --radius: 0.5rem;
+  }
+
   * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+    border-color: hsl(var(--border));
   }
 
   body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
     font-family: 'DM Sans', sans-serif;
-    background-color: #FAFAF5;
-    color: #1C1C1E;
     -webkit-font-smoothing: antialiased;
   }
 
-  h1, h2, h3 {
+  h1, h2, h3, h4 {
     font-family: 'Playfair Display', serif;
+  }
+
+  html {
+    scroll-behavior: smooth;
   }
 }
 
 @layer components {
+  /* Primary button — forest green */
   .btn-primary {
-    @apply bg-forest text-white px-6 py-3 rounded-xl font-semibold
-           hover:bg-dark transition-all duration-200 active:scale-95;
+    @apply inline-flex items-center justify-center gap-2
+           bg-[hsl(var(--primary))] text-white
+           px-5 py-2.5 rounded-lg font-semibold text-sm
+           hover:opacity-90 transition-all duration-200
+           active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
-  .btn-gold {
-    @apply bg-gold text-dark px-6 py-3 rounded-xl font-semibold
+  /* Accent button — gold */
+  .btn-accent {
+    @apply inline-flex items-center justify-center gap-2
+           bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]
+           px-5 py-2.5 rounded-lg font-semibold text-sm
            hover:opacity-90 transition-all duration-200 active:scale-95;
   }
 
+  /* Outline button */
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2
+           border border-[hsl(var(--border))] text-[hsl(var(--foreground))]
+           px-5 py-2.5 rounded-lg font-semibold text-sm
+           hover:bg-[hsl(var(--secondary))] transition-all duration-200;
+  }
+
+  /* Card */
   .card {
-    @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-4;
+    @apply bg-white rounded-xl border border-[hsl(var(--border))]
+           shadow-sm p-4;
   }
 
+  /* Input */
   .input {
-    @apply w-full border border-gray-200 rounded-xl px-4 py-3
-           focus:outline-none focus:ring-2 focus:ring-forest
-           text-sm transition-all duration-200;
+    @apply w-full border border-[hsl(var(--input))] rounded-lg px-3 py-2.5
+           bg-white text-sm text-[hsl(var(--foreground))]
+           focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))]
+           focus:border-transparent transition-all placeholder:text-[hsl(var(--muted-foreground))];
   }
 
+  /* Badge variants */
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
+  }
   .badge-green {
-    @apply bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-medium;
+    @apply badge bg-[hsl(var(--secondary))] text-[hsl(var(--primary))];
   }
-
   .badge-gold {
-    @apply bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded-full font-medium;
+    @apply badge bg-amber-100 text-amber-700;
+  }
+  .badge-red {
+    @apply badge bg-red-100 text-red-700;
   }
 
-  .badge-red {
-    @apply bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full font-medium;
+  /* Section container */
+  .section-container {
+    @apply container mx-auto px-4 max-w-6xl;
   }
+
+  /* Dashboard layout */
+  .dashboard-page {
+    @apply pb-20 min-h-screen bg-[hsl(var(--background))];
+  }
+
+  /* Dashboard header */
+  .page-header {
+    @apply bg-[hsl(var(--primary))] text-white px-4 py-4;
+  }
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px);   }
+  50%       { transform: translateY(-8px);  }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(100%); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+.animate-fade-in-up { animation: fadeInUp 0.6s ease forwards; }
+.animate-fade-in    { animation: fadeIn 0.4s ease forwards;   }
+.animate-float      { animation: float 3s ease-in-out infinite;}
+.animate-slide-up   { animation: slideUp 0.3s ease;           }
+
+/* Stagger delays */
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+.delay-300 { animation-delay: 0.3s; }
+.delay-400 { animation-delay: 0.4s; }
+.delay-500 { animation-delay: 0.5s; }
+.delay-600 { animation-delay: 0.6s; }
+.delay-700 { animation-delay: 0.7s; }
+
+/* Hide scrollbar */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }

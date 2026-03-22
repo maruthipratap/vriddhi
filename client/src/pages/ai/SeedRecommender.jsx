@@ -1,129 +1,121 @@
 import { useState }      from 'react'
 import { useSelector }   from 'react-redux'
-import api               from '../../services/api.js'
+import { useAI }         from '../../hooks/useAI.js'
 
 export default function SeedRecommender() {
-  const accessToken = useSelector(s => s.auth.accessToken)
-  const [form, setForm] = useState({
+  const { recommendSeeds, isLoading, error } = useAI()
+  const [result, setResult] = useState(null)
+  const [form,   setForm]   = useState({
     cropType:     'tomato',
     soilType:     'loamy',
     season:       'kharif',
     budgetPerAcre: 5000,
   })
-  const [result,    setResult]    = useState(null)
-  const [isLoading, setLoading]   = useState(false)
-  const [error,     setError]     = useState(null)
 
+  const crops     = ['tomato','wheat','rice','cotton','maize','onion','potato','chilli','soybean','groundnut']
   const soilTypes = ['loamy','clay','sandy','silt','mixed']
   const seasons   = ['kharif','rabi','zaid']
-  const crops     = ['tomato','wheat','rice','cotton','maize',
-                     'onion','potato','chilli','soybean','groundnut']
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setLoading(true)
-    setError(null)
-    try {
-      const res = await api.post('/ai/recommend-seeds', form, {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      })
-      setResult(res.data.data)
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to get recommendations')
-    } finally {
-      setLoading(false)
-    }
+    const data = await recommendSeeds(form)
+    if (data) setResult(data)
   }
 
   return (
-    <div className="pb-20">
-      <div className="bg-forest px-4 py-4">
-        <h2 className="text-white font-bold text-lg">🌱 Seed Recommender</h2>
-        <p className="text-green-200 text-sm">AI-powered variety selection</p>
+    <div className="dashboard-page pt-14 pb-20 md:pb-6">
+      {/* Page header */}
+      <div className="bg-primary px-4 pt-6 pb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center
+                          justify-center text-xl">
+            🌱
+          </div>
+          <div>
+            <h1 className="font-heading text-xl font-bold text-primary-foreground">
+              Seed Recommender
+            </h1>
+            <p className="text-primary-foreground/70 text-xs">
+              AI-powered variety selection for your farm
+            </p>
+          </div>
+        </div>
       </div>
 
-      <div className="px-4 mt-4 space-y-4">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="card space-y-4">
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">
-                Crop Type
-              </label>
-              <select
-                className="input"
-                value={form.cropType}
-                onChange={e => setForm({...form, cropType: e.target.value})}
-              >
-                {crops.map(c => (
-                  <option key={c} value={c} className="capitalize">{c}</option>
-                ))}
-              </select>
-            </div>
+      <div className="section-container mt-6 space-y-5 max-w-2xl">
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="card space-y-5">
+          <div>
+            <label className="text-sm font-medium text-foreground mb-2 block">
+              Crop Type
+            </label>
+            <select
+              className="input"
+              value={form.cropType}
+              onChange={e => setForm({...form, cropType: e.target.value})}
+            >
+              {crops.map(c => (
+                <option key={c} value={c} className="capitalize">{c}</option>
+              ))}
+            </select>
+          </div>
 
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">
-                Soil Type
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {soilTypes.map(s => (
-                  <button
-                    key={s} type="button"
-                    onClick={() => setForm({...form, soilType: s})}
-                    className={`py-2 rounded-xl text-xs font-medium border
-                                transition-all capitalize ${
-                                  form.soilType === s
-                                    ? 'border-forest bg-green-50 text-forest'
-                                    : 'border-gray-200 text-gray-500'
-                                }`}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">
-                Season
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {seasons.map(s => (
-                  <button
-                    key={s} type="button"
-                    onClick={() => setForm({...form, season: s})}
-                    className={`py-2 rounded-xl text-xs font-medium border
-                                transition-all capitalize ${
-                                  form.season === s
-                                    ? 'border-forest bg-green-50 text-forest'
-                                    : 'border-gray-200 text-gray-500'
-                                }`}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">
-                Budget per Acre (₹)
-              </label>
-              <input
-                className="input" type="number"
-                value={form.budgetPerAcre}
-                onChange={e => setForm({...form, budgetPerAcre: +e.target.value})}
-              />
+          <div>
+            <label className="text-sm font-medium text-foreground mb-2 block">
+              Soil Type
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {soilTypes.map(s => (
+                <button key={s} type="button"
+                  onClick={() => setForm({...form, soilType: s})}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium border
+                              capitalize transition-all ${
+                                form.soilType === s
+                                  ? 'bg-primary text-primary-foreground border-primary'
+                                  : 'border-border text-muted-foreground hover:border-primary/40'
+                              }`}
+                >
+                  {s}
+                </button>
+              ))}
             </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="btn-primary w-full flex items-center justify-center gap-2"
-          >
+          <div>
+            <label className="text-sm font-medium text-foreground mb-2 block">
+              Season
+            </label>
+            <div className="flex gap-2">
+              {seasons.map(s => (
+                <button key={s} type="button"
+                  onClick={() => setForm({...form, season: s})}
+                  className={`flex-1 py-2.5 rounded-lg text-sm font-medium border
+                              capitalize transition-all ${
+                                form.season === s
+                                  ? 'bg-primary text-primary-foreground border-primary'
+                                  : 'border-border text-muted-foreground hover:border-primary/40'
+                              }`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-foreground mb-2 block">
+              Budget per Acre (₹)
+            </label>
+            <input className="input" type="number"
+              value={form.budgetPerAcre}
+              onChange={e => setForm({...form, budgetPerAcre: +e.target.value})} />
+          </div>
+
+          <button type="submit" disabled={isLoading}
+            className="btn-primary w-full py-3">
             {isLoading ? (
               <>
-                <div className="w-5 h-5 border-2 border-white
+                <div className="w-4 h-4 border-2 border-white
                                 border-t-transparent rounded-full animate-spin"/>
                 Getting AI recommendations...
               </>
@@ -132,62 +124,74 @@ export default function SeedRecommender() {
         </form>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-600
-                          text-sm px-4 py-3 rounded-xl">
+          <div className="bg-destructive/10 border border-destructive/20
+                          text-destructive text-sm px-4 py-3 rounded-lg">
             {error}
           </div>
         )}
 
+        {/* Results */}
         {result && (
           <div className="space-y-4">
             {/* Advice banner */}
-            <div className="bg-green-50 border border-green-200
-                            rounded-2xl p-4">
-              <p className="text-xs font-bold text-forest mb-1">
-                🌾 AI ADVICE
+            <div className="bg-secondary border border-border rounded-xl p-4">
+              <p className="text-xs font-bold text-primary uppercase
+                            tracking-wider mb-1">
+                🌾 AI Advice
               </p>
-              <p className="text-sm text-gray-700">{result.generalAdvice}</p>
-              <p className="text-xs text-forest font-medium mt-2">
-                Best sowing: {result.bestSowingWindow}
+              <p className="text-sm text-foreground leading-relaxed">
+                {result.generalAdvice}
+              </p>
+              <p className="text-xs text-primary font-semibold mt-2">
+                📅 Best sowing: {result.bestSowingWindow}
               </p>
             </div>
 
-            {/* Recommendations */}
+            {/* Recommendation cards */}
             {result.recommendations?.map((rec, i) => (
-              <div key={i} className="card border-l-4 border-forest">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="w-7 h-7 bg-forest text-white rounded-full
-                                     flex items-center justify-center text-sm font-bold">
+              <div key={i}
+                className="card border-l-4 border-primary">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-primary text-primary-foreground
+                                    rounded-full flex items-center justify-center
+                                    text-sm font-bold font-heading">
                       {rec.rank}
-                    </span>
+                    </div>
                     <div>
-                      <p className="font-bold text-dark text-sm">{rec.variety}</p>
-                      <p className="text-xs text-gray-500">{rec.brand}</p>
+                      <p className="font-heading font-bold text-foreground">
+                        {rec.variety}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{rec.brand}</p>
                     </div>
                   </div>
-                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                  <span className={`badge text-xs ${
                     rec.suitability === 'high'
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-yellow-100 text-yellow-700'
+                      ? 'bg-primary/10 text-primary'
+                      : 'bg-accent/20 text-accent-foreground'
                   }`}>
                     {rec.suitability} match
                   </span>
                 </div>
-                <p className="text-xs text-gray-600 mb-2">{rec.whyRecommended}</p>
-                <div className="grid grid-cols-3 gap-2 text-xs">
-                  <div className="bg-gray-50 rounded-lg p-2 text-center">
-                    <p className="text-gray-400">Yield</p>
-                    <p className="font-medium text-dark">{rec.expectedYield}</p>
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-2 text-center">
-                    <p className="text-gray-400">Cost</p>
-                    <p className="font-medium text-dark">{rec.estimatedCost}</p>
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-2 text-center">
-                    <p className="text-gray-400">Days</p>
-                    <p className="font-medium text-dark">{rec.daysToHarvest}d</p>
-                  </div>
+
+                <p className="text-sm text-muted-foreground mb-3 leading-relaxed">
+                  {rec.whyRecommended}
+                </p>
+
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { label: 'Yield',  value: rec.expectedYield  },
+                    { label: 'Cost',   value: rec.estimatedCost  },
+                    { label: 'Days',   value: `${rec.daysToHarvest}d` },
+                  ].map(stat => (
+                    <div key={stat.label}
+                      className="bg-secondary rounded-lg p-2.5 text-center">
+                      <p className="text-xs text-muted-foreground">{stat.label}</p>
+                      <p className="text-sm font-semibold text-foreground mt-0.5">
+                        {stat.value}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               </div>
             ))}
