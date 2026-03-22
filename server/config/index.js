@@ -40,7 +40,7 @@ const config = {
   isProduction: process.env.NODE_ENV === 'production',
 
   db: {
-    uri:     required('MONGODB_URI'),
+    uri:     required('MONGODB_URL'),
     options: {
       maxPoolSize:              50,
       minPoolSize:              10,
