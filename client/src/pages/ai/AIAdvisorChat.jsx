@@ -51,6 +51,8 @@ export default function AIAdvisorChat() {
             message:  content,
             language: user?.language || 'en',
             history:  newMessages.slice(-6), // last 3 exchanges
+            state: user?.state,
+            district: user?.district,
           }),
         }
       )

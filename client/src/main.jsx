@@ -5,6 +5,8 @@ import { store }      from './store/index.js'
 import App            from './App.jsx'
 import './styles/globals.css'
 
+window.__store__ = store
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <Provider store={store}>

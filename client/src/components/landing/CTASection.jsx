@@ -13,16 +13,19 @@ export default function CTASection() {
 
       <div className="section-container relative z-10 text-center">
         <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl
-                       font-bold text-primary-foreground mb-4">
+                       font-bold text-primary-foreground mb-4 opacity-0 animate-fade-in-up"
+            style={{ animationFillMode: 'forwards' }}>
           Ready to Transform Your Farm?
         </h2>
         <p className="text-primary-foreground/80 text-lg max-w-xl
-                      mx-auto mb-8 leading-relaxed">
+                      mx-auto mb-8 leading-relaxed opacity-0 animate-fade-in-up"
+           style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}>
           Join thousands of farmers getting the best prices, AI-powered advice,
           and direct access to verified suppliers.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center opacity-0 animate-fade-in-up"
+             style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
           <button
             onClick={() => navigate('/auth?mode=register')}
             className="btn-accent text-base px-8 py-3"

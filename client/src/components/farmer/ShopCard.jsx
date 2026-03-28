@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import IconGlyph from '../common/IconGlyph.jsx'
 
 export default function ShopCard({ shop }) {
   return (
@@ -9,7 +10,7 @@ export default function ShopCard({ shop }) {
       {/* Icon */}
       <div className="w-14 h-14 bg-green-100 rounded-2xl flex items-center
                       justify-center text-3xl flex-shrink-0">
-        🏪
+        <IconGlyph name="store" size={30} className="text-forest" />
       </div>
 
       {/* Info */}
@@ -37,13 +38,22 @@ export default function ShopCard({ shop }) {
       {/* Rating & delivery */}
       <div className="text-right flex-shrink-0">
         <p className="text-xs font-bold text-dark">
-          ⭐ {shop.rating > 0 ? shop.rating.toFixed(1) : 'New'}
+          <span className="inline-flex items-center gap-1">
+            <IconGlyph name="star" size={12} className="text-accent" />
+            {shop.rating > 0 ? shop.rating.toFixed(1) : 'New'}
+          </span>
         </p>
         {shop.deliveryAvailable && (
-          <span className="badge-gold text-xs mt-1 block">🚚 Delivery</span>
+          <span className="badge-gold text-xs mt-1 inline-flex items-center gap-1">
+            <IconGlyph name="delivery" size={12} />
+            Delivery
+          </span>
         )}
         {shop.verificationStatus === 'verified' && (
-          <span className="text-xs text-forest">✓ Verified</span>
+          <span className="text-xs text-forest inline-flex items-center gap-1">
+            <IconGlyph name="check" size={12} />
+            Verified
+          </span>
         )}
       </div>
     </Link>

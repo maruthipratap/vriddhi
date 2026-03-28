@@ -133,16 +133,16 @@ productSchema.index({ category: 1, isAvailable: 1 })
 productSchema.index({ tags: 1 })
 productSchema.index({ expiryDate: 1 }, { sparse: true })
 productSchema.index(
-  { name: 'text', description: 'text', brand: 'text', tags: 'text' },
+  { shopId: 1, name: 'text', description: 'text', brand: 'text', tags: 'text' },
   { weights: { name: 10, brand: 5, tags: 3, description: 1 } }
 )
 
 // Auto-exclude deleted
-productSchema.pre(/^find/, function (next) {
-  if (!this.getOptions().includeDeleted) {
+productSchema.pre(/^find/, function () {
+  const options = this.getOptions() || {}
+  if (!options.includeDeleted) {
     this.where({ isDeleted: false })
   }
-  next()
 })
 
 // Auto mark unavailable when stock hits 0

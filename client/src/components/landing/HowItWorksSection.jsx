@@ -1,24 +1,26 @@
+import IconGlyph from '../common/IconGlyph.jsx'
+
 const steps = [
   {
-    icon: '📍',
+    icon: 'mapPin',
     step: '01',
     title: 'Find Nearby Shops',
     description: 'Enter your location and discover verified agri-input shops within your radius.',
   },
   {
-    icon: '🛒',
+    icon: 'shoppingCart',
     step: '02',
     title: 'Browse & Compare',
     description: 'Compare prices, check stock, and read reviews across multiple shops.',
   },
   {
-    icon: '💬',
+    icon: 'messageSquare',
     step: '03',
     title: 'Chat & Get AI Advice',
     description: 'Message shop owners directly or ask the AI advisor about your crop needs.',
   },
   {
-    icon: '🚚',
+    icon: 'truck',
     step: '04',
     title: 'Order & Receive',
     description: 'Place your order, track it in real-time, and get doorstep delivery.',
@@ -30,7 +32,7 @@ export default function HowItWorksSection() {
     <section id="how-it-works" className="py-24 bg-background">
       <div className="section-container">
         {/* Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-16 opacity-0 animate-fade-in-up" style={{ animationFillMode: 'forwards' }}>
           <span className="text-sm font-semibold text-accent
                            uppercase tracking-wider">
             Simple
@@ -42,7 +44,7 @@ export default function HowItWorksSection() {
         </div>
 
         {/* Steps */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="relative grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {steps.map((s, i) => (
             <div
               key={s.step}
@@ -55,7 +57,7 @@ export default function HowItWorksSection() {
               {/* Icon with step badge */}
               <div className="relative inline-flex items-center justify-center
                               w-16 h-16 rounded-full bg-primary/10 mb-4">
-                <span className="text-2xl">{s.icon}</span>
+                <IconGlyph name={s.icon} size={28} className="text-primary" />
                 <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full
                                  bg-accent text-accent-foreground text-xs
                                  font-bold flex items-center justify-center

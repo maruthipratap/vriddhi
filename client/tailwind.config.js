@@ -13,11 +13,16 @@ export default {
       fontFamily: {
         heading: ['Playfair Display', 'serif'],
         body:    ['DM Sans', 'sans-serif'],
+        editorial: ['Source Serif 4', 'serif'],
         sans:    ['DM Sans', 'sans-serif'],
       },
       colors: {
         background:  'hsl(var(--background))',
         foreground:  'hsl(var(--foreground))',
+        popover: {
+          DEFAULT: 'hsl(var(--popover))',
+          foreground: 'hsl(var(--popover-foreground))',
+        },
         primary: {
           DEFAULT:    'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))',
@@ -44,6 +49,16 @@ export default {
         card: {
           DEFAULT:    'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
+        },
+        sidebar: {
+          DEFAULT: 'hsl(var(--sidebar-background))',
+          foreground: 'hsl(var(--sidebar-foreground))',
+          primary: 'hsl(var(--sidebar-primary))',
+          'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
+          accent: 'hsl(var(--sidebar-accent))',
+          'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
+          border: 'hsl(var(--sidebar-border))',
+          ring: 'hsl(var(--sidebar-ring))',
         },
         // Legacy aliases for existing components
         forest: 'hsl(123 55% 24%)',

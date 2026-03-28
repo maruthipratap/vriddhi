@@ -159,23 +159,18 @@ userSchema.index({ isDeleted: 1, isActive:  1 })
 // ─────────────────────────────────────────────────────────────
 // HOOKS
 // ─────────────────────────────────────────────────────────────
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next()
-  try {
-    const salt   = await bcrypt.genSalt(12)
-    this.password = await bcrypt.hash(this.password, salt)
-    next()
-  } catch (err) {
-    next(err)
-  }
+userSchema.pre('save', async function () {
+  if (!this.isModified('password')) return
+  const salt   = await bcrypt.genSalt(12)
+  this.password = await bcrypt.hash(this.password, salt)
 })
 
 // Auto-exclude soft-deleted users from all queries
-userSchema.pre(/^find/, function (next) {
-  if (!this.getOptions().includeDeleted) {
+userSchema.pre(/^find/, function () {
+  const options = this.getOptions() || {}
+  if (!options.includeDeleted) {
     this.where({ isDeleted: false })
   }
-  next()
 })
 
 // ─────────────────────────────────────────────────────────────

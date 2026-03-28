@@ -1,12 +1,15 @@
+import IconGlyph from '../common/IconGlyph.jsx'
+import { ORDER_STATUS_ICONS } from '../../utils/iconMaps.js'
+
 const STATUS_CONFIG = {
-  pending:          { color: 'badge-gold',  icon: '⏳', label: 'Pending'           },
-  confirmed:        { color: 'badge-green', icon: '✅', label: 'Confirmed'          },
-  processing:       { color: 'badge-gold',  icon: '⚙️', label: 'Processing'         },
-  ready:            { color: 'badge-green', icon: '📦', label: 'Ready for Pickup'   },
-  out_for_delivery: { color: 'badge-gold',  icon: '🚚', label: 'Out for Delivery'   },
-  delivered:        { color: 'badge-green', icon: '🎉', label: 'Delivered'          },
-  cancelled:        { color: 'badge-red',   icon: '❌', label: 'Cancelled'          },
-  refunded:         { color: 'badge-gold',  icon: '↩️', label: 'Refunded'           },
+  pending:          { color: 'badge-gold',  icon: ORDER_STATUS_ICONS.pending, label: 'Pending'           },
+  confirmed:        { color: 'badge-green', icon: ORDER_STATUS_ICONS.confirmed, label: 'Confirmed'          },
+  processing:       { color: 'badge-gold',  icon: ORDER_STATUS_ICONS.processing, label: 'Processing'         },
+  ready:            { color: 'badge-green', icon: ORDER_STATUS_ICONS.ready, label: 'Ready for Pickup'   },
+  out_for_delivery: { color: 'badge-gold',  icon: ORDER_STATUS_ICONS.out_for_delivery, label: 'Out for Delivery'   },
+  delivered:        { color: 'badge-green', icon: ORDER_STATUS_ICONS.delivered, label: 'Delivered'          },
+  cancelled:        { color: 'badge-red',   icon: ORDER_STATUS_ICONS.cancelled, label: 'Cancelled'          },
+  refunded:         { color: 'badge-gold',  icon: ORDER_STATUS_ICONS.refunded, label: 'Refunded'           },
 }
 
 export default function OrderCard({ order }) {
@@ -25,7 +28,8 @@ export default function OrderCard({ order }) {
           </p>
         </div>
         <span className={`${status.color} flex items-center gap-1`}>
-          {status.icon} {status.label}
+          <IconGlyph name={status.icon} size={12} />
+          {status.label}
         </span>
       </div>
 
@@ -34,7 +38,7 @@ export default function OrderCard({ order }) {
         {order.items?.map((item, i) => (
           <div key={i} className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2">
-              <span>📦</span>
+              <IconGlyph name="box" size={14} className="text-muted-foreground" />
               <div>
                 <p className="text-dark font-medium text-xs line-clamp-1">
                   {item.productName}

@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import IconGlyph from './IconGlyph.jsx'
 
 export default function Modal({
   isOpen, onClose, title,
@@ -25,16 +26,13 @@ export default function Modal({
                  justify-center px-4 pb-4 sm:pb-0"
       onClick={onClose}
     >
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm"/>
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
 
-      {/* Modal */}
       <div
         className={`relative bg-white rounded-3xl w-full ${sizes[size]}
                     shadow-2xl p-6 z-10 animate-slide-up`}
         onClick={e => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="flex items-center justify-between mb-4">
           {title && (
             <h3 className="font-bold text-dark text-lg">{title}</h3>
@@ -45,7 +43,7 @@ export default function Modal({
                        justify-center text-gray-500 hover:bg-gray-200
                        transition-all ml-auto"
           >
-            ✕
+            <IconGlyph name="close" size={16} />
           </button>
         </div>
         {children}

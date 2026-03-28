@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useDispatch, useSelector }     from 'react-redux'
 import { loginUser, registerUser, clearError } from '../../store/slices/authSlice.js'
+import IconGlyph from '../../components/common/IconGlyph.jsx'
+import { getDashboardPath } from '../../utils/dashboardPath.js'
 
 export default function AuthPage() {
   const navigate       = useNavigate()
   const dispatch       = useDispatch()
   const [params]       = useSearchParams()
-  const { isLoading, error, accessToken } = useSelector(s => s.auth)
+  const { isLoading, error, accessToken, user } = useSelector(s => s.auth)
 
   const initMode = params.get('mode') === 'register' ? 'register' : 'login'
   const initRole = params.get('role') || 'farmer'
@@ -23,8 +25,8 @@ export default function AuthPage() {
   })
 
   useEffect(() => {
-    if (accessToken) navigate('/home', { replace: true })
-  }, [accessToken])
+    if (accessToken) navigate(getDashboardPath(user), { replace: true })
+  }, [accessToken, navigate, user])
 
   useEffect(() => { dispatch(clearError()) }, [mode])
 
@@ -43,7 +45,7 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex">
+    <div className="page-shell mesh-bg flex">
       {/* Left panel — image */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
         <img
@@ -57,7 +59,9 @@ export default function AuthPage() {
         <div className="absolute inset-0 flex flex-col justify-center
                         px-12 text-white">
           <a href="/" className="flex items-center gap-2 mb-12">
-            <span className="text-3xl">🌱</span>
+            <span className="w-10 h-10 rounded-xl bg-white/15 text-accent flex items-center justify-center">
+              <IconGlyph name="sprout" size={22} />
+            </span>
             <span className="font-heading text-2xl font-bold">Vriddhi</span>
           </a>
           <h2 className="font-heading text-4xl font-bold mb-4 leading-tight">
@@ -92,16 +96,18 @@ export default function AuthPage() {
 
       {/* Right panel — form */}
       <div className="w-full lg:w-1/2 flex flex-col items-center
-                      justify-center px-6 py-12 bg-background">
+                      justify-center px-6 py-12 bg-transparent">
         {/* Mobile logo */}
         <a href="/" className="flex items-center gap-2 mb-8 lg:hidden">
-          <span className="text-2xl">🌱</span>
+          <span className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+            <IconGlyph name="sprout" size={20} />
+          </span>
           <span className="font-heading text-xl font-bold text-primary">
             Vriddhi
           </span>
         </a>
 
-        <div className="w-full max-w-md">
+        <div className="panel w-full max-w-md p-6 sm:p-8">
           {/* Toggle */}
           <div className="flex rounded-xl border border-border bg-muted p-1 mb-8">
             {['login', 'register'].map(m => (
@@ -121,7 +127,7 @@ export default function AuthPage() {
           </div>
 
           <h1 className="font-heading text-2xl font-bold text-foreground mb-1">
-            {mode === 'login' ? 'Welcome back 👋' : 'Create your account 🚀'}
+            {mode === 'login' ? 'Welcome back' : 'Create your account'}
           </h1>
           <p className="text-muted-foreground text-sm mb-6">
             {mode === 'login'
@@ -207,8 +213,8 @@ export default function AuthPage() {
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    { value: 'farmer',     label: '🧑‍🌾 Farmer',     desc: 'Buy agri inputs'   },
-                    { value: 'shop_owner', label: '🏪 Shop Owner',  desc: 'Sell to farmers'   },
+                    { value: 'farmer', icon: 'sprout', label: 'Farmer', desc: 'Buy agri inputs'   },
+                    { value: 'shop_owner', icon: 'store', label: 'Shop Owner',  desc: 'Sell to farmers'   },
                   ].map(r => (
                     <button
                       key={r.value}
@@ -221,7 +227,8 @@ export default function AuthPage() {
                                       : 'border-border hover:border-primary/40'
                                   }`}
                     >
-                      <p className="text-sm font-semibold text-foreground">
+                      <p className="text-sm font-semibold text-foreground inline-flex items-center gap-2">
+                        <IconGlyph name={r.icon} size={16} className="text-primary" />
                         {r.label}
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5">

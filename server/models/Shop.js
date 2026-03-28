@@ -120,8 +120,14 @@ const shopSchema = new mongoose.Schema(
       index:   true,
     },
 
-    verifiedAt: { type: Date,                          default: null },
-    verifiedBy: { type: mongoose.Schema.Types.ObjectId, default: null },
+    verifiedAt: { type: Date, default: null },
+    verifiedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    verificationNote: { type: String, default: '' },
+    verificationUpdatedAt: { type: Date, default: null },
 
     // Denormalized for performance — updated async
     rating:       { type: Number, default: 0,     min: 0, max: 5 },
@@ -163,29 +169,24 @@ shopSchema.index({ categories: 1, isActive: 1 })
 // ─────────────────────────────────────────────────────────────
 // HOOKS
 // ─────────────────────────────────────────────────────────────
-shopSchema.pre('save', async function (next) {
-  // Auto-generate slug from shop name
+shopSchema.pre('save', async function () {
   if (this.isModified('shopName')) {
     const base = slugify(this.shopName, { lower: true, strict: true })
-    let   slug = base
-    let   count = 0
-
-    // Ensure uniqueness
+    let slug = base
+    let count = 0
     while (await mongoose.model('Shop').findOne({ slug, _id: { $ne: this._id } })) {
       count++
       slug = `${base}-${count}`
     }
     this.slug = slug
   }
-  next()
 })
 
-// Auto-exclude deleted shops
-shopSchema.pre(/^find/, function (next) {
-  if (!this.getOptions().includeDeleted) {
+shopSchema.pre(/^find/, function () {
+  const options = this.getOptions() || {}
+  if (!options.includeDeleted) {
     this.where({ isDeleted: false })
   }
-  next()
 })
 
 const Shop = mongoose.model('Shop', shopSchema)

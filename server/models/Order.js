@@ -151,13 +151,12 @@ orderSchema.index({ razorpayOrderId: 1 }, { sparse: true })
 // ─────────────────────────────────────────────────────────────
 // HOOKS — auto generate order number
 // ─────────────────────────────────────────────────────────────
-orderSchema.pre('save', async function (next) {
+orderSchema.pre('save', async function () {
   if (!this.orderNumber) {
     const count = await mongoose.model('Order').countDocuments()
     const pad   = String(count + 1).padStart(6, '0')
     this.orderNumber = `VRD-${new Date().getFullYear()}-${pad}`
   }
-  next()
 })
 
 const Order = mongoose.model('Order', orderSchema)

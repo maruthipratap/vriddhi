@@ -2,17 +2,8 @@ import { Link }        from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 import { addToCart }   from '../../store/slices/orderSlice.js'
 import { useState }    from 'react'
-
-const CATEGORY_ICONS = {
-  seeds:        '🌱',
-  fertilizers:  '🧪',
-  pesticides:   '🛡️',
-  irrigation:   '💧',
-  tools:        '🔧',
-  soil_health:  '🌍',
-  organic:      '🌿',
-  animal_livestock: '🐄',
-}
+import IconGlyph from '../common/IconGlyph.jsx'
+import { CATEGORY_ICON_NAMES } from '../../utils/iconMaps.js'
 
 export default function ProductCard({ product, showAddToCart = true }) {
   const dispatch   = useDispatch()
@@ -38,7 +29,11 @@ export default function ProductCard({ product, showAddToCart = true }) {
       {/* Image */}
       <div className="w-full h-28 bg-green-50 rounded-xl flex items-center
                       justify-center text-4xl mb-3">
-        {CATEGORY_ICONS[product.category] || '📦'}
+        <IconGlyph
+          name={CATEGORY_ICON_NAMES[product.category] || 'box'}
+          size={40}
+          className="text-forest"
+        />
       </div>
 
       {/* Info */}
@@ -60,7 +55,10 @@ export default function ProductCard({ product, showAddToCart = true }) {
       {/* Badges */}
       <div className="flex gap-1 mt-2 flex-wrap">
         {product.isOrganic && (
-          <span className="badge-green">🌿 Organic</span>
+          <span className="badge-green inline-flex items-center gap-1">
+            <IconGlyph name="leaf" size={12} />
+            Organic
+          </span>
         )}
         {!product.isAvailable && (
           <span className="badge-red">Out of stock</span>
@@ -81,7 +79,7 @@ export default function ProductCard({ product, showAddToCart = true }) {
                           : 'bg-forest text-white hover:bg-dark'
                       }`}
         >
-          {added ? '✓ Added!' : '+ Add to Cart'}
+          {added ? 'Added!' : 'Add to Cart'}
         </button>
       )}
     </Link>

@@ -1,3 +1,4 @@
+import mongoose          from 'mongoose'
 import crypto            from 'crypto'
 import Razorpay          from 'razorpay'
 import config            from '../config/index.js'
@@ -95,46 +96,45 @@ const orderService = {
     const tax   = Math.round(subtotal * 0.00)  // GST handled by shop
     const total = subtotal + deliveryFee + tax
 
-    // 5. Atomic stock deduction for ALL items
-    // If any fails: out of stock
-    const stockResults = []
-    for (const item of orderItems) {
-      const result = await productRepository.decrementStock(
-        item.productId, item.quantity
-      )
-      if (!result) {
-        // Rollback all previous deductions
-        for (const prev of stockResults) {
-          await productRepository.incrementStock(
-            prev.productId, prev.quantity
-          )
-        }
-        const err  = new Error(`Insufficient stock for one or more items`)
-        err.status = 400
-        err.code   = 'INSUFFICIENT_STOCK'
-        throw err
-      }
-      stockResults.push(item)
-    }
+    // 5. Atomic stock deduction & Order creation inside a Transaction
+    const session = await mongoose.startSession()
+    let order = null
 
-    // 6. Create order in DB
-    const order = await orderRepository.create({
-      farmerId,
-      shopId,
-      items:    orderItems,
-      pricing:  { subtotal, deliveryFee, tax, total },
-      status:   'pending',
-      paymentStatus: paymentMethod === 'cod' ? 'pending' : 'pending',
-      paymentMethod,
-      deliveryType,
-      deliveryAddress,
-      notes,
-      timeline: [{
-        status:    'pending',
-        note:      'Order placed',
-        timestamp: new Date(),
-      }],
-    })
+    try {
+      await session.withTransaction(async () => {
+        for (const item of orderItems) {
+          const result = await productRepository.decrementStock(
+            item.productId, item.quantity, session
+          )
+          if (!result) {
+            const err  = new Error(`Insufficient stock for ${item.productName}`)
+            err.status = 400
+            err.code   = 'INSUFFICIENT_STOCK'
+            throw err
+          }
+        }
+
+        order = await orderRepository.create({
+          farmerId,
+          shopId,
+          items:    orderItems,
+          pricing:  { subtotal, deliveryFee, tax, total },
+          status:   'pending',
+          paymentStatus: paymentMethod === 'cod' ? 'pending' : 'pending',
+          paymentMethod,
+          deliveryType,
+          deliveryAddress,
+          notes,
+          timeline: [{
+            status:    'pending',
+            note:      'Order placed',
+            timestamp: new Date(),
+          }],
+        }, session)
+      })
+    } finally {
+      await session.endSession()
+    }
 
     // 7. Create Razorpay order for online payment
     let razorpayOrder = null
@@ -288,14 +288,25 @@ const orderService = {
       throw err
     }
 
-    // Restore stock for all items
-    for (const item of order.items) {
-      await productRepository.incrementStock(
-        item.productId, item.quantity
-      )
+    // Atomic stock restoration + status update inside a Transaction
+    const session = await mongoose.startSession()
+    let updatedOrder = null
+
+    try {
+      await session.withTransaction(async () => {
+        // Restore stock for all items
+        for (const item of order.items) {
+          await productRepository.incrementStock(
+            item.productId, item.quantity, session
+          )
+        }
+        updatedOrder = await orderRepository.cancelOrder(orderId, userRole, reason, session)
+      })
+    } finally {
+      await session.endSession()
     }
 
-    return orderRepository.cancelOrder(orderId, userRole, reason)
+    return updatedOrder
   },
 }
 

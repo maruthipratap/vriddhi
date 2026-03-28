@@ -1,3 +1,5 @@
+import IconGlyph from '../common/IconGlyph.jsx'
+
 export default function LandingFooter() {
   const cols = [
     {
@@ -21,7 +23,9 @@ export default function LandingFooter() {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <span className="text-2xl">🌱</span>
+              <span className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                <IconGlyph name="sprout" size={22} />
+              </span>
               <span className="font-heading text-lg font-bold text-card-foreground">
                 Vriddhi
               </span>
@@ -69,7 +73,11 @@ export default function LandingFooter() {
 
         <div className="border-t border-border mt-8 pt-8 text-center
                         text-sm text-muted-foreground">
-          © 2026 Vriddhi. Built with ❤️ for Indian farmers.
+          <span className="inline-flex items-center gap-1">
+            © 2026 Vriddhi. Built with
+            <IconGlyph name="heart" size={14} className="text-accent" />
+            for Indian farmers.
+          </span>
         </div>
       </div>
     </footer>

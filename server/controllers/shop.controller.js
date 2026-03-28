@@ -1,5 +1,7 @@
 import shopRepository    from '../repositories/shop.repository.js'
 import productRepository from '../repositories/product.repository.js'
+import orderRepository   from '../repositories/order.repository.js'
+import mandiService      from '../services/mandi.service.js'
 import {
   createShopSchema,
   updateShopSchema,
@@ -147,6 +149,73 @@ export async function updateShop(req, res, next) {
       success: true,
       message: 'Shop updated successfully',
       data:    { shop: updated },
+    })
+  } catch (err) {
+    next(err)
+  }
+}
+
+export async function getShopDashboard(req, res, next) {
+  try {
+    const shop = await shopRepository.findByUserId(req.user.id)
+    if (!shop) {
+      return res.status(404).json({
+        success: false,
+        message: 'Shop not found',
+        code: 'SHOP_NOT_FOUND',
+      })
+    }
+
+    const [products, orders, mandi] = await Promise.all([
+      productRepository.findByShopId(shop._id),
+      orderRepository.findByShop(shop._id),
+      mandiService.getMandiPrices({
+        district: shop.address?.district || '',
+        state: shop.address?.state || '',
+        limit: 8,
+      }),
+    ])
+
+    const inStockProducts = products.filter((product) => product.isAvailable && product.stockQuantity > 0)
+    const lowStockProducts = products.filter((product) => product.stockQuantity > 0 && product.stockQuantity <= 10)
+    const outOfStockProducts = products.filter((product) => product.stockQuantity === 0 || !product.isAvailable)
+    const pendingOrders = orders.filter((order) => ['pending', 'confirmed', 'processing', 'ready'].includes(order.status))
+    const revenuePaise = orders.reduce((sum, order) => (
+      order.paymentStatus === 'paid' || order.status === 'delivered'
+        ? sum + (order.pricing?.total || 0)
+        : sum
+    ), 0)
+
+    res.status(200).json({
+      success: true,
+      data: {
+        shop: {
+          shopName: shop.shopName,
+          district: shop.address?.district || '',
+          state: shop.address?.state || '',
+          verificationStatus: shop.verificationStatus,
+          totalOrders: shop.totalOrders || orders.length,
+          rating: shop.rating || 0,
+        },
+        stats: {
+          totalProducts: products.length,
+          inStockProducts: inStockProducts.length,
+          lowStockProducts: lowStockProducts.length,
+          outOfStockProducts: outOfStockProducts.length,
+          totalOrders: orders.length,
+          pendingOrders: pendingOrders.length,
+          revenuePaise,
+        },
+        recentOrders: orders.slice(0, 5),
+        topProducts: [...products]
+          .sort((a, b) => (b.totalSold || 0) - (a.totalSold || 0))
+          .slice(0, 5),
+        mandi: {
+          prices: mandi.prices || [],
+          source: mandi.source || '',
+          lastUpdated: mandi.lastUpdated || '',
+        },
+      },
     })
   } catch (err) {
     next(err)

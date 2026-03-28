@@ -1,16 +1,18 @@
+import IconGlyph from '../common/IconGlyph.jsx'
+
 const aiTools = [
-  { icon: '🌱', name: 'Seed Recommender',  desc: 'Top 5 seed varieties for your farm'     },
-  { icon: '🧪', name: 'Combo Planner',     desc: 'Season-long input schedule'              },
-  { icon: '📷', name: 'Disease Identifier',desc: 'Upload photo, get diagnosis'             },
-  { icon: '📄', name: 'Soil Analyzer',     desc: 'Personalized fertilizer plan'           },
-  { icon: '☁️', name: 'Weather Advisor',   desc: 'Spray timing & frost warnings'          },
-  { icon: '📅', name: 'Crop Calendar',     desc: 'Full-season activity schedule'           },
-  { icon: '💰', name: 'Profit Calculator', desc: 'Cost vs yield analysis'                  },
-  { icon: '🏛️', name: 'Scheme Matcher',   desc: 'Find eligible govt schemes'              },
-  { icon: '📈', name: 'Mandi Predictor',   desc: 'Best time to sell crops'                },
-  { icon: '💬', name: 'Multilingual Chat', desc: 'AI in Hindi, Telugu, Tamil'             },
-  { icon: '👁️', name: 'Seed Quality Check',desc: 'Visual authenticity scanner'            },
-  { icon: '📦', name: 'Reorder Predictor', desc: 'Smart stock alerts for shops'           },
+  { icon: 'sprout', name: 'Seed Recommender',  desc: 'Top 5 seed varieties for your farm'     },
+  { icon: 'flask', name: 'Combo Planner',     desc: 'Season-long input schedule'              },
+  { icon: 'camera', name: 'Disease Identifier',desc: 'Upload photo, get diagnosis'             },
+  { icon: 'fileText', name: 'Soil Analyzer',     desc: 'Personalized fertilizer plan'           },
+  { icon: 'cloudSun', name: 'Weather Advisor',   desc: 'Spray timing & frost warnings'          },
+  { icon: 'calendar', name: 'Crop Calendar',     desc: 'Full-season activity schedule'           },
+  { icon: 'calculator', name: 'Profit Calculator', desc: 'Cost vs yield analysis'                  },
+  { icon: 'landmark', name: 'Scheme Matcher',   desc: 'Find eligible govt schemes'              },
+  { icon: 'trendingUp', name: 'Mandi Predictor',   desc: 'Best time to sell crops'                },
+  { icon: 'messageSquare', name: 'Multilingual Chat', desc: 'AI in Hindi, Telugu, Tamil'             },
+  { icon: 'eye', name: 'Seed Quality Check',desc: 'Visual authenticity scanner'            },
+  { icon: 'package', name: 'Reorder Predictor', desc: 'Smart stock alerts for shops'           },
 ]
 
 export default function AISection() {
@@ -18,7 +20,7 @@ export default function AISection() {
     <section id="ai" className="py-24 bg-secondary">
       <div className="section-container">
         {/* Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-16 opacity-0 animate-fade-in-up" style={{ animationFillMode: 'forwards' }}>
           <span className="text-sm font-semibold text-accent
                            uppercase tracking-wider">
             AI-Powered
@@ -49,8 +51,8 @@ export default function AISection() {
             >
               <div className="w-10 h-10 rounded-lg bg-primary/10
                               flex-shrink-0 flex items-center justify-center
-                              text-xl group-hover:bg-primary/20 transition-colors">
-                {tool.icon}
+                              group-hover:bg-primary/20 transition-colors">
+                <IconGlyph name={tool.icon} size={20} className="text-primary" />
               </div>
               <div>
                 <h3 className="font-heading text-sm font-semibold

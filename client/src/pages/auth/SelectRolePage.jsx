@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { motion } from 'framer-motion'
 import api from '../../services/api.js'
+import IconGlyph from '../../components/common/IconGlyph.jsx'
 
 export default function SelectRolePage() {
   const navigate    = useNavigate()
@@ -13,14 +14,14 @@ export default function SelectRolePage() {
   const roles = [
     {
       id:    'farmer',
-      icon:  '🧑‍🌾',
+      icon:  'sprout',
       title: "I'm a Farmer",
       desc:  'Find nearby shops, compare prices, get AI crop advice',
       color: 'border-primary bg-primary/5',
     },
     {
       id:    'shop_owner',
-      icon:  '🏪',
+      icon:  'store',
       title: 'I Own a Shop',
       desc:  'List products, connect with farmers, grow your business',
       color: 'border-accent bg-accent/5',
@@ -46,7 +47,9 @@ export default function SelectRolePage() {
       >
         {/* Header */}
         <div className="text-center mb-8">
-          <span className="text-4xl">🌱</span>
+          <span className="mx-auto w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+            <IconGlyph name="sprout" size={30} />
+          </span>
           <h1 className="font-heading text-3xl font-bold text-foreground mt-4">
             How will you use Vriddhi?
           </h1>
@@ -72,12 +75,12 @@ export default function SelectRolePage() {
                           }`}
             >
               <div className={`w-14 h-14 rounded-xl flex items-center
-                              justify-center text-3xl flex-shrink-0
+                              justify-center flex-shrink-0
                               ${selected === role.id
                                 ? 'bg-primary/10'
                                 : 'bg-secondary'
                               }`}>
-                {role.icon}
+                <IconGlyph name={role.icon} size={28} className="text-primary" />
               </div>
               <div>
                 <h3 className="font-heading text-lg font-semibold
@@ -89,7 +92,9 @@ export default function SelectRolePage() {
                 </p>
               </div>
               {selected === role.id && (
-                <span className="ml-auto text-primary text-xl">✓</span>
+                <span className="ml-auto text-primary">
+                  <IconGlyph name="check" size={20} />
+                </span>
               )}
             </motion.button>
           ))}

@@ -44,7 +44,7 @@ const productRepository = {
 
   // ── Atomic stock decrement (CRITICAL — from schema audit) ─
   // Race condition fix: findOneAndUpdate with $gte guard
-  async decrementStock(productId, qty) {
+  async decrementStock(productId, qty, session = null) {
     const result = await Product.findOneAndUpdate(
       {
         _id:           productId,
@@ -52,26 +52,27 @@ const productRepository = {
         isAvailable:   true,
       },
       { $inc: { stockQuantity: -qty } },
-      { new: true }
+      { new: true, session }
     )
     // Auto mark unavailable if stock hits 0
     if (result && result.stockQuantity === 0) {
       await Product.updateOne(
         { _id: productId },
-        { $set: { isAvailable: false } }
+        { $set: { isAvailable: false } },
+        { session }
       )
     }
     return result
   },
 
-  async incrementStock(productId, qty) {
+  async incrementStock(productId, qty, session = null) {
     return Product.findByIdAndUpdate(
       productId,
       {
         $inc: { stockQuantity: qty  },
         $set: { isAvailable:   true },
       },
-      { new: true }
+      { new: true, session }
     )
   },
 

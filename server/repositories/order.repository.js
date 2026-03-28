@@ -2,8 +2,8 @@ import Order from '../models/Order.js'
 
 const orderRepository = {
 
-  async create(data) {
-    return Order.create(data)
+  async create(data, session = null) {
+    return Order.create([data], { session }).then(docs => docs[0])
   },
 
   async findById(id) {
@@ -70,7 +70,7 @@ const orderRepository = {
     )
   },
 
-  async cancelOrder(orderId, cancelledBy, reason) {
+  async cancelOrder(orderId, cancelledBy, reason, session = null) {
     return Order.findByIdAndUpdate(
       orderId,
       {
@@ -87,7 +87,7 @@ const orderRepository = {
           }
         },
       },
-      { new: true }
+      { new: true, session }
     )
   },
 }

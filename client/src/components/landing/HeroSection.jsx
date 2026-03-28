@@ -1,110 +1,87 @@
 import { useNavigate } from 'react-router-dom'
-import { useSelector }  from 'react-redux'
+import { useSelector } from 'react-redux'
+import IconGlyph from '../common/IconGlyph.jsx'
+import { getDashboardPath } from '../../utils/dashboardPath.js'
 
 export default function HeroSection() {
-  const navigate    = useNavigate()
-  const accessToken = useSelector(s => s.auth.accessToken)
+  const navigate = useNavigate()
+  const { accessToken, user } = useSelector((state) => state.auth)
 
   const stats = [
-    { value: '10K+',  label: 'Farmers'  },
-    { value: '2K+',   label: 'Shops'    },
-    { value: '50K+',  label: 'Products' },
+    { value: '10K+', label: 'Farmers' },
+    { value: '2K+', label: 'Shops' },
+    { value: '50K+', label: 'Products' },
   ]
 
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden">
-      
-      {/* Background Image */}
+    <section className="relative min-h-screen overflow-hidden pt-[82px]">
       <div className="absolute inset-0">
         <img
           src="/images/hero-farm.jpg"
           alt="Indian farmer in lush green farmland"
           className="w-full h-full object-cover"
         />
-
-        {/* Gradient Overlay */}
         <div
           className="absolute inset-0"
           style={{
             background:
-              'linear-gradient(to right, rgba(10,46,20,0.92) 0%, rgba(10,46,20,0.75) 50%, rgba(10,46,20,0.3) 100%)',
+              'linear-gradient(90deg, rgba(13,31,16,0.82) 0%, rgba(13,31,16,0.62) 28%, rgba(13,31,16,0.22) 56%, rgba(13,31,16,0.04) 100%)',
           }}
         />
       </div>
 
-      {/* Content */}
-      <div className="relative z-10 w-full container mx-auto px-6 lg:px-12 py-24">
-        <div className="max-w-2xl text-left lg:pl-4 opacity-0 animate-fade-in-up"
-             style={{ animationFillMode: 'forwards' }}>
+      <div className="relative z-10 w-full max-w-[1780px] mx-auto px-8 lg:px-10">
+        <div className="min-h-[calc(100vh-82px)] flex items-center">
+          <div className="max-w-[860px] pt-6">
+            <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-primary/35 text-white text-sm font-semibold mb-9 border border-white/10 opacity-0 animate-fade-in-up">
+              <IconGlyph name="bot" size={15} className="text-accent" />
+              India&apos;s Farming Superapp
+            </span>
 
-          {/* Badge */}
-          <span className="inline-flex items-center gap-2 px-4 py-1.5
-                           rounded-full bg-white/15 text-white text-sm
-                           font-medium mb-6 border border-white/20">
-            🤖 India's Farming Superapp
-          </span>
+            <h1 className="max-w-[820px] font-heading text-[3.35rem] sm:text-[4.15rem] lg:text-[4.7rem] leading-[0.96] font-bold text-white tracking-[-0.025em] [text-shadow:0_2px_18px_rgba(0,0,0,0.22)] opacity-0 animate-fade-in-up delay-150">
+              Grow More. Earn More.
+              <br />
+              <span className="text-accent">Live More.</span>
+            </h1>
 
-          {/* Headline */}
-          <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl
-                         font-bold leading-tight mb-6 text-white">
-            Grow More. Earn More.{' '}
-            <span className="text-accent">Live More.</span>
-          </h1>
+            <p className="mt-8 max-w-[690px] text-[1.12rem] lg:text-[1.22rem] leading-[1.7] text-white [text-shadow:0_2px_12px_rgba(0,0,0,0.36)] opacity-0 animate-fade-in-up delay-300">
+              From seed to harvest, we&apos;re with you. Find nearby shops, compare
+              prices, get AI crop advice all in your local language.
+            </p>
 
-          {/* Subtext */}
-          <p className="text-lg text-white/90 mb-8 max-w-xl leading-relaxed">
-            From seed to harvest, we're with you. Find nearby shops,
-            compare prices, get AI crop advice — all in your local language.
-          </p>
+            <div className="mt-10 flex flex-col sm:flex-row sm:flex-wrap gap-4 opacity-0 animate-fade-in-up delay-450">
+              <button
+                onClick={() => navigate(accessToken ? getDashboardPath(user) : '/auth?mode=register')}
+                className="inline-flex min-w-[296px] items-center justify-center gap-3 rounded-xl bg-primary px-8 py-4 text-white font-semibold text-[1.02rem] shadow-lg shadow-black/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/15"
+              >
+                Find Shops Near Me
+                <IconGlyph name="mapPin" size={18} />
+              </button>
 
-          {/* Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <button
-              onClick={() => navigate(accessToken ? '/home' : '/auth?mode=register')}
-              className="btn-primary text-base px-8 py-3 text-lg"
-            >
-              📍 Find Shops Near Me
-            </button>
+              <a
+                href="#ai"
+                className="inline-flex min-w-[260px] items-center justify-center gap-3 rounded-xl border border-white/35 bg-white/12 px-8 py-4 text-white font-semibold text-[1.02rem] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:bg-white/16"
+              >
+                Explore AI Tools
+                <IconGlyph name="arrowRight" size={18} />
+              </a>
+            </div>
 
-            <a
-              href="#ai"
-              className="inline-flex items-center justify-center gap-2
-                         border border-white/30 text-white px-8 py-3 rounded-lg
-                         font-semibold text-base hover:bg-white/10
-                         transition-all duration-200"
-            >
-              Explore AI Tools →
-            </a>
-          </div>
-
-          {/* Stats */}
-          <div className="flex gap-10 mt-14 opacity-0 animate-fade-in"
-               style={{ animationDelay: '0.7s', animationFillMode: 'forwards' }}>
-            {stats.map(stat => (
-              <div key={stat.label}>
-                <div className="font-heading text-2xl font-bold text-accent">
-                  {stat.value}
+            <div className="mt-14 flex flex-wrap items-start gap-x-16 gap-y-7 opacity-0 animate-fade-in-up delay-600">
+              {stats.map((stat) => (
+                <div key={stat.label} className="min-w-[96px]">
+                  <div className="font-heading text-[2.05rem] leading-none font-bold text-accent">
+                    {stat.value}
+                  </div>
+                  <div className="mt-1.5 text-[0.96rem] leading-none text-white/85">
+                    {stat.label}
+                  </div>
                 </div>
-                <div className="text-sm text-white/70 mt-0.5">
-                  {stat.label}
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-
         </div>
       </div>
-
-      {/* Scroll Indicator */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2
-                      flex flex-col items-center gap-2 text-white/60">
-        <span className="text-xs">Scroll to explore</span>
-        <div className="w-5 h-8 border border-white/30 rounded-full
-                        flex items-start justify-center pt-1.5">
-          <div className="w-1 h-2 bg-white/60 rounded-full animate-bounce"/>
-        </div>
-      </div>
-
     </section>
   )
 }

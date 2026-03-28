@@ -27,6 +27,12 @@ import http                          from 'http'
 import { initSocket }                from './config/socket.js'
 import chatRoutes                    from './routes/chat.routes.js'
 import aiRoutes                      from './routes/ai.routes.js'
+import forumRoutes                   from './routes/forum.routes.js'
+import mandiRoutes                   from './routes/mandi.routes.js'
+import publicRoutes                  from './routes/public.routes.js'
+import adminRoutes                   from './routes/admin.routes.js'
+import calendarRoutes                from './routes/calendar.routes.js'
+import schemeRoutes                  from './routes/scheme.routes.js'
 
 // ─────────────────────────────────────────────────────────────
 // APP SETUP
@@ -100,6 +106,12 @@ app.use('/api/v1/products', productRoutes)
 app.use('/api/v1/orders', orderRoutes)
 app.use('/api/v1/chats', chatRoutes)
 app.use('/api/v1/ai', aiRoutes)
+app.use('/api/v1/calendar', calendarRoutes)
+app.use('/api/v1/forum', forumRoutes)
+app.use('/api/v1/mandi', mandiRoutes)
+app.use('/api/v1/public', publicRoutes)
+app.use('/api/v1/admin', adminRoutes)
+app.use('/api/v1/schemes', schemeRoutes)
 
 // ── 404 + Error handlers (must be last) ──────────────────────
 app.use(notFound)
@@ -146,4 +158,8 @@ process.on('unhandledRejection', (err) => {
   process.exit(1)
 })
 
-startServer()
+if (process.env.NODE_ENV !== 'test') {
+  startServer()
+}
+
+export default app

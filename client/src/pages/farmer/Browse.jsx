@@ -1,45 +1,41 @@
-import { useEffect, useState }          from 'react'
-import { useDispatch, useSelector }      from 'react-redux'
-import { Link, useSearchParams }         from 'react-router-dom'
-import { fetchNearbyProducts }           from '../../store/slices/productSlice.js'
+import { useEffect, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { Link, useSearchParams } from 'react-router-dom'
+import { fetchNearbyProducts } from '../../store/slices/productSlice.js'
 import { useLocation as useGeoLocation } from '../../hooks/useLocation.js'
-
-const CATEGORY_ICONS = {
-  seeds: '🌱', fertilizers: '🧪', pesticides: '🛡️',
-  tools: '🔧', irrigation: '💧', organic: '🌿',
-  soil_health: '🌍', animal_livestock: '🐄',
-}
+import IconGlyph from '../../components/common/IconGlyph.jsx'
+import { CATEGORY_ICON_NAMES } from '../../utils/iconMaps.js'
 
 const categories = [
-  { value: '',              label: 'All'          },
-  { value: 'seeds',         label: '🌱 Seeds'     },
-  { value: 'fertilizers',   label: '🧪 Fertilizers'},
-  { value: 'pesticides',    label: '🛡️ Pesticides' },
-  { value: 'tools',         label: '🔧 Tools'     },
-  { value: 'irrigation',    label: '💧 Irrigation' },
-  { value: 'organic',       label: '🌿 Organic'   },
-  { value: 'soil_health',   label: '🌍 Soil'      },
+  { value: '', label: 'All' },
+  { value: 'seeds', label: 'Seeds', icon: 'sprout' },
+  { value: 'fertilizers', label: 'Fertilizers', icon: 'flask' },
+  { value: 'pesticides', label: 'Pesticides', icon: 'bug' },
+  { value: 'tools', label: 'Tools', icon: 'wrench' },
+  { value: 'irrigation', label: 'Irrigation', icon: 'droplets' },
+  { value: 'organic', label: 'Organic', icon: 'leaf' },
+  { value: 'soil_health', label: 'Soil', icon: 'testTube' },
 ]
 
 export default function Browse() {
-  const dispatch     = useDispatch()
-  const [params]     = useSearchParams()
+  const dispatch = useDispatch()
+  const [params] = useSearchParams()
   const { location } = useGeoLocation()
-  const products     = useSelector(s => s.products.nearby)
-  const isLoading    = useSelector(s => s.products.isLoading)
+  const products = useSelector((s) => s.products.nearby)
+  const isLoading = useSelector((s) => s.products.isLoading)
 
-  const [search,   setSearch]   = useState('')
+  const [search, setSearch] = useState('')
   const [category, setCategory] = useState(params.get('category') || '')
 
   useEffect(() => {
     if (location) dispatch(fetchNearbyProducts({ ...location, category, search }))
-  }, [location, category, search])
+  }, [dispatch, location, category, search])
 
   return (
     <div className="dashboard-page pt-14 pb-20 md:pb-6">
-      {/* Header */}
-      <div className="bg-primary px-4 pt-6 pb-8">
-        <h1 className="font-heading text-xl font-bold text-primary-foreground mb-3">
+      <div className="page-header rounded-b-[2rem] shadow-sm">
+        <p className="section-kicker text-white/70">Marketplace</p>
+        <h1 className="mb-3 mt-2 font-heading text-2xl font-bold text-primary-foreground">
           Browse Products
         </h1>
         <input
@@ -47,86 +43,81 @@ export default function Browse() {
           type="text"
           placeholder="Search seeds, fertilizers, brands..."
           value={search}
-          onChange={e => setSearch(e.target.value)}
+          onChange={(e) => setSearch(e.target.value)}
         />
       </div>
 
-      {/* Category filter */}
-      <div className="bg-white border-b border-border sticky top-14 z-40">
+      <div className="sticky top-14 z-40 border-b border-border bg-white">
         <div className="section-container">
-          <div className="flex gap-2 py-3 overflow-x-auto no-scrollbar">
-            {categories.map(cat => (
+          <div className="flex gap-2 overflow-x-auto py-3 no-scrollbar">
+            {categories.map((cat) => (
               <button
                 key={cat.value}
                 onClick={() => setCategory(cat.value)}
-                className={`whitespace-nowrap px-3 py-1.5 rounded-full text-xs
-                            font-medium border transition-all ${
-                              category === cat.value
-                                ? 'bg-primary text-primary-foreground border-primary'
-                                : 'bg-white text-muted-foreground border-border hover:border-primary/40'
-                            }`}
+                className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${
+                  category === cat.value
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-border bg-white text-muted-foreground hover:border-primary/40'
+                }`}
               >
-                {cat.label}
+                <span className="inline-flex items-center gap-1.5">
+                  {cat.icon && <IconGlyph name={cat.icon} size={14} />}
+                  {cat.label}
+                </span>
               </button>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Results */}
       <div className="section-container mt-5">
         {isLoading ? (
           <div className="flex justify-center py-16">
-            <div className="w-8 h-8 border-4 border-primary
-                            border-t-transparent rounded-full animate-spin"/>
+            <div className="h-10 w-10 rounded-full border-4 border-primary border-t-transparent animate-spin" />
           </div>
         ) : products.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="text-6xl mb-4">🔍</div>
+          <div className="panel py-16 text-center">
+            <div className="mx-auto mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary text-primary">
+              <IconGlyph name="search" size={28} />
+            </div>
             <p className="font-heading text-lg text-foreground">No products found</p>
-            <p className="text-muted-foreground text-sm mt-2">
-              Try a different category or search term
+            <p className="mt-2 text-sm text-muted-foreground">
+              Try a different category or search term.
             </p>
           </div>
         ) : (
           <>
-            <p className="text-sm text-muted-foreground mb-4">
-              {products.length} products found
-            </p>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {products.map(product => (
+            <p className="mb-4 text-sm text-muted-foreground">{products.length} products found</p>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+              {products.map((product) => (
                 <Link
                   key={product._id}
                   to={`/products/${product._id}`}
-                  className="card hover:border-primary/40 hover:shadow-md
-                             transition-all group"
+                  className="card group transition-all hover:border-primary/40 hover:shadow-md"
                 >
-                  <div className="w-full h-28 bg-secondary rounded-xl flex
-                                  items-center justify-center text-4xl mb-3
-                                  group-hover:bg-primary/10 transition-colors">
-                    {CATEGORY_ICONS[product.category] || '📦'}
+                  <div className="mb-3 flex h-28 w-full items-center justify-center rounded-xl bg-secondary text-4xl transition-colors group-hover:bg-primary/10">
+                    <IconGlyph
+                      name={CATEGORY_ICON_NAMES[product.category] || 'box'}
+                      size={34}
+                      className="text-primary"
+                    />
                   </div>
-                  <p className="font-semibold text-foreground text-xs line-clamp-2">
-                    {product.name}
-                  </p>
+                  <p className="line-clamp-2 text-xs font-semibold text-foreground">{product.name}</p>
                   {product.brand && (
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {product.brand}
-                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">{product.brand}</p>
                   )}
-                  <p className="text-primary font-bold text-sm mt-2">
-                    ₹{(product.basePrice / 100).toFixed(0)}
-                    <span className="text-muted-foreground text-xs font-normal">
-                      /{product.unit}
-                    </span>
+                  <p className="mt-2 text-sm font-bold text-primary">
+                    Rs {(product.basePrice / 100).toFixed(0)}
+                    <span className="text-xs font-normal text-muted-foreground">/{product.unit}</span>
                   </p>
-                  <div className="flex gap-1 mt-2 flex-wrap">
+                  <div className="mt-2 flex flex-wrap gap-1">
                     {product.isOrganic && (
-                      <span className="badge-green">🌿 Organic</span>
+                      <span className="badge-green inline-flex items-center gap-1">
+                        <IconGlyph name="leaf" size={12} />
+                        Organic
+                      </span>
                     )}
-                    {!product.isAvailable && (
-                      <span className="badge-red">Out of stock</span>
-                    )}
+                    {!product.isAvailable && <span className="badge-red">Out of stock</span>}
                   </div>
                 </Link>
               ))}

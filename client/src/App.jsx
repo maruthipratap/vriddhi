@@ -1,57 +1,71 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState, lazy, Suspense } from 'react'
 import { refreshToken } from './store/slices/authSlice.js'
 import { useSocket } from './hooks/useSocket.js'
 
 // ── Layout & Common Components ────────────────────────────────
 import DashboardLayout from './components/common/DashboardLayout.jsx'
 import Loader from './components/common/Loader.jsx'
+import FloatingSupportWidget from './components/common/FloatingSupportWidget.jsx'
+import { getDashboardPath } from './utils/dashboardPath.js'
 
-// ── Public Pages (Landing + Auth) ─────────────────────────────
-import LandingPage from './pages/landing/LandingPage.jsx'
-import AuthPage from './pages/auth/AuthPage.jsx'
+// ── Dynamic Imports (Code Splitting) ──────────────────────────
 
-// ── Auth Flow (Role + Onboarding) ─────────────────────────────
-import SelectRolePage from './pages/auth/SelectRolePage.jsx'
-import FarmerOnboarding from './pages/farmer/FarmerOnboarding.jsx'
-import ShopOnboarding from './pages/shop/ShopOnboarding.jsx'
+// Public Pages (Landing + Auth)
+const LandingPage = lazy(() => import('./pages/landing/LandingPage.jsx'))
+const AuthPage = lazy(() => import('./pages/auth/AuthPage.jsx'))
 
-// ── Farmer Pages ──────────────────────────────────────────────
-import Home from './pages/farmer/Home.jsx'
-import Browse from './pages/farmer/Browse.jsx'
-import ProductDetail from './pages/farmer/ProductDetail.jsx'
-import Cart from './pages/farmer/Cart.jsx'
-import Orders from './pages/farmer/Orders.jsx'
-import CropCalendar from './pages/farmer/CropCalendar.jsx'
-import Forum from './pages/farmer/Forum.jsx'
-import MandiPrices from './pages/farmer/MandiPrices.jsx'
-import FarmerSettings from './pages/farmer/FarmerSettings.jsx'
+// Auth Flow (Role + Onboarding)
+const SelectRolePage = lazy(() => import('./pages/auth/SelectRolePage.jsx'))
+const FarmerOnboarding = lazy(() => import('./pages/farmer/FarmerOnboarding.jsx'))
+const ShopOnboarding = lazy(() => import('./pages/shop/ShopOnboarding.jsx'))
 
-// ── Chat ─────────────────────────────────────────────────────
-import ChatList from './pages/chat/ChatList.jsx'
-import ChatRoom from './pages/chat/ChatRoom.jsx'
+// Farmer Pages
+const Home = lazy(() => import('./pages/farmer/Home.jsx'))
+const Browse = lazy(() => import('./pages/farmer/Browse.jsx'))
+const ProductDetail = lazy(() => import('./pages/farmer/ProductDetail.jsx'))
+const Cart = lazy(() => import('./pages/farmer/Cart.jsx'))
+const Orders = lazy(() => import('./pages/farmer/Orders.jsx'))
+const CropCalendar = lazy(() => import('./pages/farmer/CropCalendar.jsx'))
+const Forum = lazy(() => import('./pages/farmer/Forum.jsx'))
+const MandiPrices = lazy(() => import('./pages/farmer/MandiPrices.jsx'))
+const FarmerSettings = lazy(() => import('./pages/farmer/FarmerSettings.jsx'))
 
-// ── AI Features ──────────────────────────────────────────────
-import SeedRecommender from './pages/ai/SeedRecommender.jsx'
-import CostCalculator from './pages/ai/CostCalculator.jsx'
-import FertilizerAdvisor from './pages/ai/FertilizerAdvisor.jsx'
-import SchemeChecker from './pages/ai/SchemeChecker.jsx'
-import AIAdvisorChat from './pages/ai/AIAdvisorChat.jsx'
+// Chat
+const ChatList = lazy(() => import('./pages/chat/ChatList.jsx'))
+const ChatRoom = lazy(() => import('./pages/chat/ChatRoom.jsx'))
 
-// ── Shop ─────────────────────────────────────────────────────
-import ShopDashboard from './pages/shop/Dashboard.jsx'
-import Inventory from './pages/shop/Inventory.jsx'
-import ShopOrders from './pages/shop/ShopOrders.jsx'
-import ShopSettings from './pages/shop/ShopSettings.jsx'
+// AI Features
+const SeedRecommender = lazy(() => import('./pages/ai/SeedRecommender.jsx'))
+const CostCalculator = lazy(() => import('./pages/ai/CostCalculator.jsx'))
+const FertilizerAdvisor = lazy(() => import('./pages/ai/FertilizerAdvisor.jsx'))
+const SchemeChecker = lazy(() => import('./pages/ai/SchemeChecker.jsx'))
+const AIAdvisorChat = lazy(() => import('./pages/ai/AIAdvisorChat.jsx'))
 
-// ── Admin ────────────────────────────────────────────────────
-import AdminDashboard from './pages/admin/Dashboard.jsx'
-import Verifications from './pages/admin/Verifications.jsx'
+// Shop
+const ShopDashboard = lazy(() => import('./pages/shop/Dashboard.jsx'))
+const Inventory = lazy(() => import('./pages/shop/Inventory.jsx'))
+const ShopOrders = lazy(() => import('./pages/shop/ShopOrders.jsx'))
+const ShopSettings = lazy(() => import('./pages/shop/ShopSettings.jsx'))
+
+// Admin
+const AdminDashboard = lazy(() => import('./pages/admin/Dashboard.jsx'))
+const Verifications = lazy(() => import('./pages/admin/Verifications.jsx'))
+const Users = lazy(() => import('./pages/admin/Users.jsx'))
+const AdminOrders = lazy(() => import('./pages/admin/AdminOrders.jsx'))
 
 // ─────────────────────────────────────────────────────────────
-// ROUTE GUARDS
+// ROUTE GUARDS & LOADERS
 // ─────────────────────────────────────────────────────────────
+
+// Specific Loaders for different domains
+const AppLoader = () => <Loader fullScreen={true} icon="globe" text="Loading..." />
+const FarmerLoader = () => <Loader fullScreen={false} icon="leaf" text="Loading Farmer Portal..." />
+const ShopLoader = () => <Loader fullScreen={false} icon="store" text="Loading Shop Portal..." />
+const AILoader = () => <Loader fullScreen={false} icon="bot" text="Loading AI Advisor..." />
+const ChatLoader = () => <Loader fullScreen={false} icon="messageSquare" text="Loading Chats..." />
+const AdminLoader = () => <Loader fullScreen={false} icon="shieldCheck" text="Loading Admin Panel..." />
 
 // Protect private routes (requires login)
 function PrivateRoute({ children }) {
@@ -60,18 +74,31 @@ function PrivateRoute({ children }) {
   return children
 }
 
-// Prevent logged-in users from accessing public pages
-function PublicOnlyRoute({ children }) {
-  const { accessToken } = useSelector(s => s.auth)
-  if (accessToken) return <Navigate to="/home" replace />
+function RoleRoute({ children, allowedRoles }) {
+  const { accessToken, user } = useSelector(s => s.auth)
+  if (!accessToken) return <Navigate to="/auth" replace />
+  if (!user || !allowedRoles.includes(user.role)) {
+    return <Navigate to="/" replace />
+  }
   return children
 }
 
-// Wrapper: PrivateRoute + DashboardLayout (clean reuse)
-function D({ children }) {
+// Prevent logged-in users from accessing public pages
+function PublicOnlyRoute({ children }) {
+  const { accessToken, user } = useSelector(s => s.auth)
+  if (accessToken) return <Navigate to={getDashboardPath(user)} replace />
+  return children
+}
+
+// Wrapper: PrivateRoute + DashboardLayout + Suspense loader
+function D({ children, fallback = <FarmerLoader /> }) {
   return (
     <PrivateRoute>
-      <DashboardLayout>{children}</DashboardLayout>
+      <DashboardLayout>
+        <Suspense fallback={fallback}>
+          {children}
+        </Suspense>
+      </DashboardLayout>
     </PrivateRoute>
   )
 }
@@ -83,81 +110,94 @@ export default function App() {
   const dispatch = useDispatch()
   const { accessToken } = useSelector(s => s.auth)
   const [initialized, setInit] = useState(false)
+  const didBootstrapAuth = useRef(false)
 
   // Connect Socket.io when logged in
   useSocket(accessToken)
 
   // Restore session on app load
   useEffect(() => {
+    if (didBootstrapAuth.current) return
+    didBootstrapAuth.current = true
     dispatch(refreshToken()).finally(() => setInit(true))
   }, [dispatch])
 
-  // Show loader until auth is checked
-  if (!initialized) return <Loader />
+  // Show generic loader until auth is checked
+  if (!initialized) return <Loader icon="sprout" text="Loading Vriddhi..." fullScreen={true} />
 
   return (
-    <BrowserRouter>
-      <Routes>
+    <BrowserRouter
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+      }}
+    >
+      <Suspense fallback={<AppLoader />}>
+        <Routes>
 
-        {/* ── PUBLIC: Landing Page ── */}
-        <Route path="/" element={
-          <PublicOnlyRoute><LandingPage /></PublicOnlyRoute>
-        }/>
+          {/* ── PUBLIC: Landing Page ── */}
+          <Route path="/" element={
+            <PublicOnlyRoute><LandingPage /></PublicOnlyRoute>
+          }/>
 
-        {/* ── PUBLIC: Auth ── */}
-        <Route path="/auth" element={
-          <PublicOnlyRoute><AuthPage /></PublicOnlyRoute>
-        }/>
+          {/* ── PUBLIC: Auth ── */}
+          <Route path="/auth" element={
+            <PublicOnlyRoute><AuthPage /></PublicOnlyRoute>
+          }/>
 
-        {/* ── PRIVATE: Role & Onboarding ── */}
-        <Route path="/select-role" element={
-          <PrivateRoute><SelectRolePage /></PrivateRoute>
-        }/>
-        <Route path="/onboarding" element={
-          <PrivateRoute><FarmerOnboarding /></PrivateRoute>
-        }/>
-        <Route path="/shop/onboarding" element={
-          <PrivateRoute><ShopOnboarding /></PrivateRoute>
-        }/>
+          {/* ── PRIVATE: Role & Onboarding ── */}
+          <Route path="/select-role" element={
+            <PrivateRoute><SelectRolePage /></PrivateRoute>
+          }/>
+          <Route path="/onboarding" element={
+            <PrivateRoute><FarmerOnboarding /></PrivateRoute>
+          }/>
+          <Route path="/shop/onboarding" element={
+            <PrivateRoute><ShopOnboarding /></PrivateRoute>
+          }/>
 
-        {/* ── PRIVATE: Farmer Dashboard ── */}
-        <Route path="/home" element={<D><Home /></D>} />
-        <Route path="/browse" element={<D><Browse /></D>} />
-        <Route path="/products/:id" element={<D><ProductDetail /></D>} />
-        <Route path="/cart" element={<D><Cart /></D>} />
-        <Route path="/orders" element={<D><Orders /></D>} />
+          {/* ── PRIVATE: Farmer Dashboard ── */}
+          <Route path="/home" element={<D><Home /></D>} />
+          <Route path="/browse" element={<D><Browse /></D>} />
+          <Route path="/products/:id" element={<D><ProductDetail /></D>} />
+          <Route path="/cart" element={<D><Cart /></D>} />
+          <Route path="/orders" element={<D><Orders /></D>} />
 
-        {/* ── PRIVATE: Chat ── */}
-        <Route path="/chats" element={<D><ChatList /></D>} />
-        <Route path="/chats/:chatId" element={<D><ChatRoom /></D>} />
+          {/* ── PRIVATE: Chat ── */}
+          <Route path="/chats" element={<D fallback={<ChatLoader />}><ChatList /></D>} />
+          <Route path="/chats/:chatId" element={<D fallback={<ChatLoader />}><ChatRoom /></D>} />
 
-        {/* ── PRIVATE: Farmer Tools ── */}
-        <Route path="/calendar" element={<D><CropCalendar /></D>} />
-        <Route path="/forum" element={<D><Forum /></D>} />
-        <Route path="/mandi" element={<D><MandiPrices /></D>} />
-        <Route path="/settings" element={<D><FarmerSettings /></D>} />
+          {/* ── PRIVATE: Farmer Tools ── */}
+          <Route path="/calendar" element={<D><CropCalendar /></D>} />
+          <Route path="/forum" element={<D><Forum /></D>} />
+          <Route path="/mandi" element={<D><MandiPrices /></D>} />
+          <Route path="/settings" element={<D><FarmerSettings /></D>} />
 
-        {/* ── PRIVATE: AI Features ── */}
-        <Route path="/ai/seeds" element={<D><SeedRecommender /></D>} />
-        <Route path="/ai/calculator" element={<D><CostCalculator /></D>} />
-        <Route path="/ai/fertilizer" element={<D><FertilizerAdvisor /></D>} />
-        <Route path="/ai/schemes" element={<D><SchemeChecker /></D>} />
-        <Route path="/ai/chat" element={<D><AIAdvisorChat /></D>} />
+          {/* ── PRIVATE: AI Features ── */}
+          <Route path="/ai/seeds" element={<D fallback={<AILoader />}><SeedRecommender /></D>} />
+          <Route path="/ai/calculator" element={<D fallback={<AILoader />}><CostCalculator /></D>} />
+          <Route path="/ai/fertilizer" element={<D fallback={<AILoader />}><FertilizerAdvisor /></D>} />
+          <Route path="/ai/schemes" element={<D fallback={<AILoader />}><SchemeChecker /></D>} />
+          <Route path="/ai/chat" element={<D fallback={<AILoader />}><AIAdvisorChat /></D>} />
 
-        {/* ── PRIVATE: Shop ── */}
-        <Route path="/shop/dashboard" element={<D><ShopDashboard /></D>} />
-        <Route path="/shop/inventory" element={<D><Inventory /></D>} />
-        <Route path="/shop/orders" element={<D><ShopOrders /></D>} />
-        <Route path="/shop/settings" element={<D><ShopSettings /></D>} />
+          {/* ── PRIVATE: Shop ── */}
+          <Route path="/shop/dashboard" element={<RoleRoute allowedRoles={['shop_owner']}><D fallback={<ShopLoader />}><ShopDashboard /></D></RoleRoute>} />
+          <Route path="/shop/inventory" element={<RoleRoute allowedRoles={['shop_owner']}><D fallback={<ShopLoader />}><Inventory /></D></RoleRoute>} />
+          <Route path="/shop/orders" element={<RoleRoute allowedRoles={['shop_owner']}><D fallback={<ShopLoader />}><ShopOrders /></D></RoleRoute>} />
+          <Route path="/shop/settings" element={<RoleRoute allowedRoles={['shop_owner']}><D fallback={<ShopLoader />}><ShopSettings /></D></RoleRoute>} />
 
-        {/* ── PRIVATE: Admin ── */}
-        <Route path="/admin" element={<D><AdminDashboard /></D>} />
-        <Route path="/admin/verify" element={<D><Verifications /></D>} />
+          {/* ── PRIVATE: Admin ── */}
+          <Route path="/admin" element={<RoleRoute allowedRoles={['admin']}><D fallback={<AdminLoader />}><AdminDashboard /></D></RoleRoute>} />
+          <Route path="/admin/verify" element={<RoleRoute allowedRoles={['admin']}><D fallback={<AdminLoader />}><Verifications /></D></RoleRoute>} />
+          <Route path="/admin/users" element={<RoleRoute allowedRoles={['admin']}><D fallback={<AdminLoader />}><Users /></D></RoleRoute>} />
+          <Route path="/admin/orders" element={<RoleRoute allowedRoles={['admin']}><D fallback={<AdminLoader />}><AdminOrders /></D></RoleRoute>} />
 
-        {/* ── FALLBACK ── */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+          {/* ── FALLBACK ── */}
+          <Route path="*" element={<Navigate to="/" replace />} />
 
-      </Routes>
+        </Routes>
+      </Suspense>
+      <FloatingSupportWidget />
     </BrowserRouter>
   )
 }
