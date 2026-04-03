@@ -82,7 +82,7 @@ const config = {
   cookie: {
     secret:   optional('COOKIE_SECRET', 'dev_cookie_secret_change_in_prod'),
     secure:   process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
   }
 }
 

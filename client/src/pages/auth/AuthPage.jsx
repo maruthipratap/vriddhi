@@ -24,8 +24,14 @@ export default function AuthPage() {
     language:   'en',
   })
 
+  const intendedPath = sessionStorage.getItem('intendedPath') || getDashboardPath(user)
   useEffect(() => {
-    if (accessToken) navigate(getDashboardPath(user), { replace: true })
+    if (accessToken) {
+      // Go back to where they came from, or dashboard
+      const intended = sessionStorage.getItem('intendedPath')
+      sessionStorage.removeItem('intendedPath')
+      navigate(intended || getDashboardPath(user), { replace: true })
+    }
   }, [accessToken, navigate, user])
 
   useEffect(() => { dispatch(clearError()) }, [mode])

@@ -70,7 +70,14 @@ const AdminLoader = () => <Loader fullScreen={false} icon="shieldCheck" text="Lo
 // Protect private routes (requires login)
 function PrivateRoute({ children }) {
   const { accessToken } = useSelector(s => s.auth)
-  if (!accessToken) return <Navigate to="/auth" replace />
+  if (!accessToken) {
+    // Remember where they were trying to go
+    const path = window.location.pathname
+    if (path !== '/auth' && path !== '/') {
+      sessionStorage.setItem('intendedPath', path)
+    }
+    return <Navigate to="/auth" replace />
+  }
   return children
 }
 
