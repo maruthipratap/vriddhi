@@ -11,9 +11,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        heading: ['Playfair Display', 'serif'],
-        body:    ['DM Sans', 'sans-serif'],
-        editorial: ['Source Serif 4', 'serif'],
+        heading: ['Playfair Display', 'Georgia', 'Cambria', '"Times New Roman"', 'Times', 'serif'],
+        body:    ['DM Sans', 'Inter', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', 'sans-serif',],
+        /*editorial: ['Source Serif 4', 'serif'],*/
         sans:    ['DM Sans', 'sans-serif'],
       },
       colors: {
