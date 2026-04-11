@@ -47,10 +47,12 @@ export async function verifyPayment(req, res, next) {
 // ── Get my orders (farmer) ────────────────────────────────────
 export async function getMyOrders(req, res, next) {
   try {
-    const orders = await orderService.getFarmerOrders(req.user.id)
+    const page  = Math.max(1, parseInt(req.query.page)  || 1)
+    const limit = Math.min(50, parseInt(req.query.limit) || 20)
+    const result = await orderService.getFarmerOrders(req.user.id, {}, { page, limit })
     res.status(200).json({
       success: true,
-      data: { orders, count: orders.length },
+      data: result,
     })
   } catch (err) {
     next(err)
@@ -88,12 +90,13 @@ export async function getShopOrders(req, res, next) {
 
     const { status } = req.query
     const filters    = status ? { status } : {}
-    const orders     = await orderService
-      .getFarmerOrders(shop._id, filters)
+    const page  = Math.max(1, parseInt(req.query.page)  || 1)
+    const limit = Math.min(50, parseInt(req.query.limit) || 20)
+    const result = await orderService.getShopOrders(shop._id, filters, { page, limit })
 
     res.status(200).json({
       success: true,
-      data: { orders, count: orders.length },
+      data: result,
     })
   } catch (err) {
     next(err)

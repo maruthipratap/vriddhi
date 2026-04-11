@@ -8,6 +8,7 @@ import { useSocket } from './hooks/useSocket.js'
 import DashboardLayout from './components/common/DashboardLayout.jsx'
 import Loader from './components/common/Loader.jsx'
 import FloatingSupportWidget from './components/common/FloatingSupportWidget.jsx'
+import ErrorBoundary from './components/common/ErrorBoundary.jsx'
 import { getDashboardPath } from './utils/dashboardPath.js'
 
 // ── Dynamic Imports (Code Splitting) ──────────────────────────
@@ -139,6 +140,7 @@ export default function App() {
         v7_relativeSplatPath: true,
       }}
     >
+      <ErrorBoundary>
       <Suspense fallback={<AppLoader />}>
         <Routes>
 
@@ -204,6 +206,7 @@ export default function App() {
 
         </Routes>
       </Suspense>
+      </ErrorBoundary>
       <FloatingSupportWidget />
     </BrowserRouter>
   )

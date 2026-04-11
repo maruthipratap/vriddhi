@@ -3,12 +3,9 @@ import api from '../../services/api.js'
 
 export const placeOrder = createAsyncThunk(
   'orders/place',
-  async (orderData, { getState, rejectWithValue }) => {
+  async (orderData, { rejectWithValue }) => {
     try {
-      const token = getState().auth.accessToken
-      const res   = await api.post('/orders', orderData, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const res = await api.post('/orders', orderData)
       return res.data.data
     } catch (err) {
       return rejectWithValue(err.response?.data?.message)
@@ -18,13 +15,10 @@ export const placeOrder = createAsyncThunk(
 
 export const fetchMyOrders = createAsyncThunk(
   'orders/fetchMine',
-  async (_, { getState, rejectWithValue }) => {
+  async (page = 1, { rejectWithValue }) => {
     try {
-      const token = getState().auth.accessToken
-      const res   = await api.get('/orders/my', {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      return res.data.data.orders
+      const res = await api.get('/orders/my', { params: { page, limit: 20 } })
+      return res.data.data   // { orders, total, page, totalPages }
     } catch (err) {
       return rejectWithValue(err.response?.data?.message)
     }
@@ -34,11 +28,13 @@ export const fetchMyOrders = createAsyncThunk(
 const orderSlice = createSlice({
   name: 'orders',
   initialState: {
-    list:      [],
-    current:   null,
-    cart:      [],
-    isLoading: false,
-    error:     null,
+    list:       [],
+    total:      0,
+    totalPages: 1,
+    current:    null,
+    cart:       [],
+    isLoading:  false,
+    error:      null,
   },
   reducers: {
     addToCart(state, action) {
@@ -79,7 +75,11 @@ const orderSlice = createSlice({
         state.error     = action.payload
       })
       .addCase(fetchMyOrders.fulfilled, (state, action) => {
-        state.list = action.payload
+        const { orders, total, page, totalPages } = action.payload
+        // Page 1 replaces; subsequent pages append (load-more pattern)
+        state.list       = page === 1 ? orders : [...state.list, ...orders]
+        state.total      = total
+        state.totalPages = totalPages
       })
   },
 })

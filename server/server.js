@@ -33,6 +33,7 @@ import publicRoutes                  from './routes/public.routes.js'
 import adminRoutes                   from './routes/admin.routes.js'
 import calendarRoutes                from './routes/calendar.routes.js'
 import schemeRoutes                  from './routes/scheme.routes.js'
+import reviewRoutes                  from './routes/review.routes.js'
 
 // ─────────────────────────────────────────────────────────────
 // APP SETUP
@@ -112,6 +113,7 @@ app.use('/api/v1/mandi', mandiRoutes)
 app.use('/api/v1/public', publicRoutes)
 app.use('/api/v1/admin', adminRoutes)
 app.use('/api/v1/schemes', schemeRoutes)
+app.use('/api/v1', reviewRoutes)
 
 // ── 404 + Error handlers (must be last) ──────────────────────
 app.use(notFound)

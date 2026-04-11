@@ -3,20 +3,45 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchProduct } from '../../store/slices/productSlice.js'
 import { addToCart } from '../../store/slices/orderSlice.js'
+import reviewService from '../../services/review.service.js'
 import IconGlyph from '../../components/common/IconGlyph.jsx'
 import { CATEGORY_ICON_NAMES } from '../../utils/iconMaps.js'
+
+function StarDisplay({ rating }) {
+  return (
+    <span className="inline-flex gap-0.5">
+      {[1,2,3,4,5].map(s => (
+        <span key={s} className={s <= Math.round(rating) ? 'text-amber-400' : 'text-border'}>★</span>
+      ))}
+    </span>
+  )
+}
 
 export default function ProductDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const product = useSelector((s) => s.products.current)
-  const [qty, setQty] = useState(1)
-  const [added, setAdded] = useState(false)
+  const [qty,     setQty]     = useState(1)
+  const [added,   setAdded]   = useState(false)
+  const [reviews, setReviews] = useState([])
+  const [revPage, setRevPage] = useState(1)
+  const [revMeta, setRevMeta] = useState(null)
 
   useEffect(() => {
     dispatch(fetchProduct(id))
   }, [dispatch, id])
+
+  // Load shop reviews once product is loaded
+  useEffect(() => {
+    if (!product?.shopId) return
+    reviewService.getShopReviews(product.shopId, revPage)
+      .then(data => {
+        setReviews(prev => revPage === 1 ? data.reviews : [...prev, ...data.reviews])
+        setRevMeta(data)
+      })
+      .catch(() => {})
+  }, [product?.shopId, revPage])
 
   if (!product) {
     return (
@@ -143,6 +168,52 @@ export default function ProductDetail() {
             )}
           </div>
         )}
+
+        {/* ── Shop Reviews ─────────────────────────────────── */}
+        <div className="panel p-5">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-sm font-semibold text-foreground">
+              Shop Reviews
+              {revMeta && (
+                <span className="ml-2 text-xs font-normal text-muted-foreground">
+                  ({revMeta.total})
+                </span>
+              )}
+            </p>
+          </div>
+
+          {reviews.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No reviews yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {reviews.map((r) => (
+                <div key={r._id} className="border-b border-border pb-3 last:border-0 last:pb-0">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-foreground">
+                      {r.farmerId?.name || 'Farmer'}
+                    </p>
+                    <StarDisplay rating={r.rating} />
+                  </div>
+                  {r.comment && (
+                    <p className="mt-1 text-sm text-muted-foreground">{r.comment}</p>
+                  )}
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {new Date(r.createdAt).toLocaleDateString('en-IN')}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {revMeta && revPage < revMeta.totalPages && (
+            <button
+              onClick={() => setRevPage(p => p + 1)}
+              className="mt-3 w-full rounded-xl border border-border py-2 text-sm text-muted-foreground hover:border-primary hover:text-primary"
+            >
+              Load more reviews
+            </button>
+          )}
+        </div>
 
         {product.isAvailable && (
           <div className="panel p-5">

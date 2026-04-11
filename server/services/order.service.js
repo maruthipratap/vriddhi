@@ -211,8 +211,13 @@ const orderService = {
   },
 
   // ── Get farmer orders ────────────────────────────────────────
-  async getFarmerOrders(farmerId) {
-    return orderRepository.findByFarmer(farmerId)
+  async getFarmerOrders(farmerId, filters = {}, pagination = {}) {
+    return orderRepository.findByFarmer(farmerId, filters, pagination)
+  },
+
+  // ── Get shop orders ───────────────────────────────────────────
+  async getShopOrders(shopId, filters = {}, pagination = {}) {
+    return orderRepository.findByShop(shopId, filters, pagination)
   },
 
   // ── Get single order ──────────────────────────────────────────

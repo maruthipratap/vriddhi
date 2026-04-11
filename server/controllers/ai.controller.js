@@ -31,7 +31,7 @@ export async function recommendSeeds(req, res, next) {
 
 export async function identifyDisease(req, res, next) {
   try {
-    const { cropType, symptoms, imageBase64 } = req.body
+    const { cropType, symptoms } = req.body
 
     if (!cropType) {
       return res.status(400).json({
@@ -39,6 +39,9 @@ export async function identifyDisease(req, res, next) {
         message: 'cropType is required',
       })
     }
+
+    // If an image was uploaded via multipart, convert buffer → base64 for Claude vision
+    const imageBase64 = req.file ? req.file.buffer.toString('base64') : null
 
     const result = await aiService.identifyDisease({
       cropType,

@@ -19,16 +19,28 @@ const orderRepository = {
     return Order.findOne({ _id: orderId, shopId })
   },
 
-  async findByFarmer(farmerId, filters = {}) {
-    return Order.find({ farmerId, ...filters })
-      .sort({ createdAt: -1 })
-      .limit(50)
+  async findByFarmer(farmerId, filters = {}, { page = 1, limit = 20 } = {}) {
+    const skip = (page - 1) * limit
+    const [orders, total] = await Promise.all([
+      Order.find({ farmerId, ...filters })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Order.countDocuments({ farmerId, ...filters }),
+    ])
+    return { orders, total, page, totalPages: Math.ceil(total / limit) }
   },
 
-  async findByShop(shopId, filters = {}) {
-    return Order.find({ shopId, ...filters })
-      .sort({ createdAt: -1 })
-      .limit(50)
+  async findByShop(shopId, filters = {}, { page = 1, limit = 20 } = {}) {
+    const skip = (page - 1) * limit
+    const [orders, total] = await Promise.all([
+      Order.find({ shopId, ...filters })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Order.countDocuments({ shopId, ...filters }),
+    ])
+    return { orders, total, page, totalPages: Math.ceil(total / limit) }
   },
 
   async findByRazorpayOrderId(razorpayOrderId) {

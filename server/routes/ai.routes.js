@@ -9,7 +9,8 @@ import {
   weatherAdvice,
   chat,
 } from '../controllers/ai.controller.js'
-import { protect } from '../middleware/auth.middleware.js'
+import { protect }          from '../middleware/auth.middleware.js'
+import { upload }           from '../middleware/upload.middleware.js'
 
 // AI rate limiter — protect Claude API costs
 const aiLimiter = rateLimit({
@@ -28,7 +29,7 @@ router.use(protect)     // all AI routes require auth
 router.use(aiLimiter)   // cost protection
 
 router.post('/recommend-seeds',    recommendSeeds)
-router.post('/identify-disease',   identifyDisease)
+router.post('/identify-disease',   upload.single('image'), identifyDisease)
 router.post('/fertilizer-advice',  adviseFertilizer)
 router.post('/match-schemes',      matchSchemes)
 router.post('/cost-profit',        calculateCostProfit)
