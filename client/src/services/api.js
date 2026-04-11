@@ -9,8 +9,10 @@ const api = axios.create({
 
 // Request interceptor — add auth header
 api.interceptors.request.use((config) => {
-  // Access token stored in Redux — injected per request
-  // Never from localStorage
+  const token = store.getState().auth.accessToken
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
   return config
 })
 

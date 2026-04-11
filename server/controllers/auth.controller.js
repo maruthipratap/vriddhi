@@ -1,5 +1,6 @@
 import authService   from '../services/auth.service.js'
 import tokenService  from '../services/token.service.js'
+import { sendPasswordResetEmail } from '../services/notification.service.js'
 import {
   registerSchema,
   loginSchema,
@@ -164,10 +165,11 @@ export async function forgotPassword(req, res, next) {
 
     const result = await authService.forgotPassword(email)
 
-    // TODO: send result._rawToken via email in production
-    // For now log in development only
-    if (process.env.NODE_ENV === 'development' && result._rawToken) {
-      console.log('🔑 Dev reset token:', result._rawToken)
+    if (result._rawToken) {
+      await sendPasswordResetEmail(
+        { name: result._userName, email: result._email },
+        result._rawToken
+      )
     }
 
     // Always return generic message — never reveal if email exists

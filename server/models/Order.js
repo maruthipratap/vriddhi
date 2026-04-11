@@ -35,8 +35,7 @@ const orderSchema = new mongoose.Schema(
   {
     // Human readable order number
     orderNumber: {
-      type:   String,
-      //unique: true,
+      type: String,
     },
 
     farmerId: {

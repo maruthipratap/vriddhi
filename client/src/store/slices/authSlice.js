@@ -33,24 +33,18 @@ export const registerUser = createAsyncThunk(
 
 export const logoutUser = createAsyncThunk(
   'auth/logout',
-  async (_, { getState }) => {
+  async () => {
     try {
-      const token = getState().auth.accessToken
-      await api.post('/auth/logout', {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      await api.post('/auth/logout')
     } catch { /* logout anyway */ }
   }
 )
 
 export const getMe = createAsyncThunk(
   'auth/getMe',
-  async (_, { getState, rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
-      const token = getState().auth.accessToken
-      const res   = await api.get('/auth/me', {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const res = await api.get('/auth/me')
       return res.data.data.user
     } catch (err) {
       return rejectWithValue(err.response?.data?.message)

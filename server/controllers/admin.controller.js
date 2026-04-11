@@ -347,7 +347,7 @@ export async function deleteForumPost(req, res, next) {
       return res.status(404).json({ success: false, message: 'Forum post not found' })
     }
 
-    res.status(200).json({ success: true, message: 'Forum post deleted heavily' })
+    res.status(200).json({ success: true, message: 'Forum post deleted successfully' })
   } catch (err) {
     next(err)
   }
