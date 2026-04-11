@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react'
-import { useSelector } from 'react-redux'
-import { getShopDashboard } from '../../services/shop.service.js'
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Legend,
+  BarChart, Bar,
+} from 'recharts'
+import { getShopDashboard, getShopAnalytics } from '../../services/shop.service.js'
 
 function formatCurrency(paise) {
   return new Intl.NumberFormat('en-IN', {
@@ -14,30 +18,120 @@ function formatPrice(value) {
   return new Intl.NumberFormat('en-IN').format(value || 0)
 }
 
+const STATUS_COLORS = {
+  pending:    '#f59e0b',
+  confirmed:  '#3b82f6',
+  processing: '#8b5cf6',
+  ready:      '#06b6d4',
+  delivered:  '#10b981',
+  cancelled:  '#ef4444',
+}
+
+const CHART_LINE_COLOR = '#16a34a'
+const BAR_COLOR        = '#16a34a'
+
+function RevenueChart({ data }) {
+  if (!data?.length) return null
+  const formatted = data.map(d => ({
+    ...d,
+    revenue: +(d.revenue / 100).toFixed(2),
+    label:   d.date.slice(5), // MM-DD
+  }))
+  return (
+    <ResponsiveContainer width="100%" height={200}>
+      <LineChart data={formatted} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+        <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+        <YAxis tick={{ fontSize: 11 }} />
+        <Tooltip
+          formatter={(v) => [`₹${v}`, 'Revenue']}
+          labelFormatter={(l) => `Date: ${l}`}
+        />
+        <Line
+          type="monotone"
+          dataKey="revenue"
+          stroke={CHART_LINE_COLOR}
+          strokeWidth={2}
+          dot={false}
+          activeDot={{ r: 4 }}
+        />
+      </LineChart>
+    </ResponsiveContainer>
+  )
+}
+
+function StatusPieChart({ data }) {
+  if (!data?.length) return null
+  return (
+    <ResponsiveContainer width="100%" height={200}>
+      <PieChart>
+        <Pie
+          data={data}
+          dataKey="count"
+          nameKey="status"
+          cx="50%"
+          cy="50%"
+          innerRadius={50}
+          outerRadius={80}
+          paddingAngle={3}
+        >
+          {data.map((entry) => (
+            <Cell
+              key={entry.status}
+              fill={STATUS_COLORS[entry.status] || '#9ca3af'}
+            />
+          ))}
+        </Pie>
+        <Legend
+          iconType="circle"
+          iconSize={8}
+          formatter={(v) => <span style={{ fontSize: 11 }}>{v}</span>}
+        />
+        <Tooltip formatter={(v, n) => [v, n]} />
+      </PieChart>
+    </ResponsiveContainer>
+  )
+}
+
+function TopProductsChart({ data }) {
+  if (!data?.length) return null
+  const formatted = data.map(d => ({
+    ...d,
+    revenue: +(d.revenue / 100).toFixed(2),
+  }))
+  return (
+    <ResponsiveContainer width="100%" height={200}>
+      <BarChart data={formatted} layout="vertical" margin={{ top: 0, right: 8, left: 8, bottom: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" horizontal={false} />
+        <XAxis type="number" tick={{ fontSize: 11 }} />
+        <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={80} />
+        <Tooltip formatter={(v) => [`₹${v}`, 'Revenue']} />
+        <Bar dataKey="revenue" fill={BAR_COLOR} radius={[0, 4, 4, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  )
+}
+
 export default function ShopDashboard() {
-  const accessToken = useSelector((state) => state.auth.accessToken)
-  const [dashboard, setDashboard] = useState(null)
-  const [isLoading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [dashboard, setDashboard]     = useState(null)
+  const [analytics, setAnalytics]     = useState(null)
+  const [analyticsDays, setDays]      = useState(7)
+  const [isLoading, setLoading]       = useState(true)
+  const [analyticsLoading, setALoading] = useState(false)
+  const [error, setError]             = useState('')
 
   useEffect(() => {
-    if (!accessToken) return
-
     let cancelled = false
 
     async function loadDashboard() {
       setLoading(true)
       setError('')
       try {
-        const data = await getShopDashboard(accessToken)
+        const data = await getShopDashboard()
         if (!cancelled) setDashboard(data)
       } catch (err) {
         if (!cancelled) {
-          if (err.response?.status === 404) {
-            setError('Your deployed backend does not have the new shop dashboard route yet. Redeploy the server to enable this page.')
-          } else {
-            setError(err.response?.data?.message || 'Failed to load shop dashboard')
-          }
+          setError(err.response?.data?.message || 'Failed to load shop dashboard')
         }
       } finally {
         if (!cancelled) setLoading(false)
@@ -45,13 +139,30 @@ export default function ShopDashboard() {
     }
 
     loadDashboard()
-    return () => {
-      cancelled = true
+    return () => { cancelled = true }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadAnalytics() {
+      setALoading(true)
+      try {
+        const data = await getShopAnalytics(analyticsDays)
+        if (!cancelled) setAnalytics(data)
+      } catch {
+        // Analytics is non-critical — fail silently
+      } finally {
+        if (!cancelled) setALoading(false)
+      }
     }
-  }, [accessToken])
+
+    loadAnalytics()
+    return () => { cancelled = true }
+  }, [analyticsDays])
 
   const stats = dashboard?.stats || {}
-  const shop = dashboard?.shop || {}
+  const shop  = dashboard?.shop  || {}
 
   return (
     <div className="dashboard-page">
@@ -76,12 +187,13 @@ export default function ShopDashboard() {
           </div>
         ) : (
           <>
+            {/* ── KPI row ── */}
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {[
-                { label: 'Products', value: stats.totalProducts ?? '--' },
-                { label: 'Pending Orders', value: stats.pendingOrders ?? '--' },
-                { label: 'Low Stock', value: stats.lowStockProducts ?? '--' },
-                { label: 'Revenue', value: formatCurrency(stats.revenuePaise) },
+                { label: 'Products',       value: stats.totalProducts  ?? '--' },
+                { label: 'Pending Orders', value: stats.pendingOrders  ?? '--' },
+                { label: 'Low Stock',      value: stats.lowStockProducts ?? '--' },
+                { label: 'Revenue',        value: formatCurrency(stats.revenuePaise) },
               ].map((card) => (
                 <div key={card.label} className="panel p-5">
                   <p className="text-sm text-muted-foreground">{card.label}</p>
@@ -90,6 +202,62 @@ export default function ShopDashboard() {
               ))}
             </div>
 
+            {/* ── Analytics charts ── */}
+            <div className="panel p-6">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <div>
+                  <p className="section-kicker">Analytics</p>
+                  <h2 className="mt-1 text-xl font-heading text-foreground">Revenue &amp; Order trends</h2>
+                </div>
+                <div className="flex gap-2">
+                  {[7, 14, 30].map((d) => (
+                    <button
+                      key={d}
+                      onClick={() => setDays(d)}
+                      className={`px-3 py-1 rounded-full text-sm border transition-colors ${
+                        analyticsDays === d
+                          ? 'bg-primary text-white border-primary'
+                          : 'border-border text-muted-foreground hover:bg-secondary'
+                      }`}
+                    >
+                      {d}d
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {analyticsLoading ? (
+                <div className="flex justify-center py-10">
+                  <div className="w-8 h-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+                </div>
+              ) : (
+                <div className="mt-6 grid gap-6 lg:grid-cols-3">
+                  <div>
+                    <p className="mb-3 text-sm font-medium text-muted-foreground">Daily Revenue (₹)</p>
+                    <RevenueChart data={analytics?.revenueTrend} />
+                    {!analytics?.revenueTrend?.length && (
+                      <p className="text-center text-sm text-muted-foreground py-8">No data for this period</p>
+                    )}
+                  </div>
+                  <div>
+                    <p className="mb-3 text-sm font-medium text-muted-foreground">Order Status Breakdown</p>
+                    <StatusPieChart data={analytics?.statusBreakdown} />
+                    {!analytics?.statusBreakdown?.length && (
+                      <p className="text-center text-sm text-muted-foreground py-8">No orders yet</p>
+                    )}
+                  </div>
+                  <div>
+                    <p className="mb-3 text-sm font-medium text-muted-foreground">Top Products by Revenue</p>
+                    <TopProductsChart data={analytics?.topProducts} />
+                    {!analytics?.topProducts?.length && (
+                      <p className="text-center text-sm text-muted-foreground py-8">No sales data yet</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ── Recent orders + inventory ── */}
             <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
               <div className="panel p-6">
                 <div className="flex items-center justify-between">
@@ -113,7 +281,7 @@ export default function ShopDashboard() {
                         <div>
                           <p className="font-medium text-foreground">{order.orderNumber}</p>
                           <p className="mt-1 text-sm text-muted-foreground">
-                            {order.items?.length || 0} item(s) - {order.status}
+                            {order.items?.length || 0} item(s) &middot; {order.status}
                           </p>
                         </div>
                         <p className="font-semibold text-foreground">
@@ -151,7 +319,7 @@ export default function ShopDashboard() {
                           <div>
                             <p className="font-medium text-foreground">{product.name}</p>
                             <p className="mt-1 text-sm text-muted-foreground">
-                              Stock {product.stockQuantity} · Sold {product.totalSold || 0}
+                              Stock {product.stockQuantity} &middot; Sold {product.totalSold || 0}
                             </p>
                           </div>
                           <p className="font-semibold text-foreground">

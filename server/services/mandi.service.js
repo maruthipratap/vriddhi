@@ -1,4 +1,7 @@
 import axios from 'axios'
+import { cacheGet, cacheSet } from '../config/redis.js'
+
+const MANDI_TTL = 6 * 60 * 60   // 6 hours
 
 const FALLBACK_MANDI_PRICES = [
   { id: 'tomato-hyd', commodity: 'Tomato', market: 'Bowenpally, Hyderabad', district: 'Hyderabad', state: 'Telangana', minPrice: 800, maxPrice: 1200, modalPrice: 1000, unit: 'INR/quintal', trend: 'up' },
@@ -104,25 +107,33 @@ async function fetchDataGovMandi({ search = '', district = '', state = '', limit
 }
 
 async function getMandiPrices(params) {
+  const cacheKey = `mandi:${params.state || ''}:${params.district || ''}:${params.search || ''}`
+
+  const cached = await cacheGet(cacheKey)
+  if (cached) return cached
+
+  let result
   try {
     const live = await fetchDataGovMandi(params)
     if (live?.prices?.length) {
-      return {
-        ...live,
-        count: live.prices.length,
-      }
+      result = { ...live, count: live.prices.length }
     }
   } catch {
-    // Fall through to curated data when the public dataset is unavailable
+    // Fall through to curated data
   }
 
-  const prices = filterFallback(params)
-  return {
-    prices,
-    count: prices.length,
-    source: 'Curated fallback data',
-    lastUpdated: new Date().toISOString(),
+  if (!result) {
+    const prices = filterFallback(params)
+    result = {
+      prices,
+      count:       prices.length,
+      source:      'Curated fallback data',
+      lastUpdated: new Date().toISOString(),
+    }
   }
+
+  await cacheSet(cacheKey, result, MANDI_TTL)
+  return result
 }
 
 export default {

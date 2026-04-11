@@ -293,13 +293,12 @@ const orderService = {
       throw err
     }
 
-    // Atomic stock restoration + status update inside a Transaction
+    // Atomic stock restoration + cancel inside a transaction
     const session = await mongoose.startSession()
     let updatedOrder = null
 
     try {
       await session.withTransaction(async () => {
-        // Restore stock for all items
         for (const item of order.items) {
           await productRepository.incrementStock(
             item.productId, item.quantity, session
@@ -309,6 +308,19 @@ const orderService = {
       })
     } finally {
       await session.endSession()
+    }
+
+    // Initiate Razorpay refund for paid online orders (non-blocking)
+    if (order.paymentStatus === 'paid' && order.razorpayPaymentId) {
+      razorpay.payments
+        .refund(order.razorpayPaymentId, { amount: order.pricing.total })
+        .then(refund => {
+          orderRepository.updateRefundStatus(orderId, 'initiated', refund.id)
+        })
+        .catch(err => {
+          console.error('[refund] Razorpay refund failed:', err.message)
+          orderRepository.updateRefundStatus(orderId, 'failed')
+        })
     }
 
     return updatedOrder

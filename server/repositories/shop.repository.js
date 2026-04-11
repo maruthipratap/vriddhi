@@ -1,4 +1,13 @@
 import Shop from '../models/Shop.js'
+import { cacheGet, cacheSet, cacheDel } from '../config/redis.js'
+
+const NEARBY_TTL   = 5  * 60   // 5 minutes
+const SHOP_TTL     = 60 * 60   // 1 hour (single shop by slug/id)
+
+// Round coords to ~1 km grid so nearby queries share cache keys
+function gridKey(lat, lng) {
+  return `${(Math.round(lat * 10) / 10).toFixed(1)},${(Math.round(lng * 10) / 10).toFixed(1)}`
+}
 
 const shopRepository = {
 
@@ -21,18 +30,24 @@ const shopRepository = {
   // ── Core feature: find shops near a location ──────────────
   // Shop-first strategy from architecture audit
   async findNearby({ lat, lng, radiusKm = 20, category, limit = 20 }) {
+    const key = `nearby_shops:${gridKey(lat, lng)}:${radiusKm}:${category || 'all'}`
+    const cached = await cacheGet(key)
+    if (cached) return cached
+
     const query = {
       location: {
         $near: {
           $geometry:    { type: 'Point', coordinates: [lng, lat] },
-          $maxDistance: radiusKm * 1000,  // metres
+          $maxDistance: radiusKm * 1000,
         },
       },
       verificationStatus: 'verified',
       isActive: true,
     }
     if (category) query.categories = category
-    return Shop.find(query).limit(limit)
+    const shops = await Shop.find(query).limit(limit)
+    await cacheSet(key, shops, NEARBY_TTL)
+    return shops
   },
 
   async findByDistrict(district, state) {
@@ -45,11 +60,17 @@ const shopRepository = {
   },
 
   async updateById(id, updates) {
-    return Shop.findByIdAndUpdate(
+    const shop = await Shop.findByIdAndUpdate(
       id,
       { $set: updates },
       { new: true, runValidators: true }
     )
+    // Bust nearby cache for this shop's grid cell so updates surface quickly
+    if (shop?.location?.coordinates) {
+      const [lng, lat] = shop.location.coordinates
+      await cacheDel(`nearby_shops:${gridKey(lat, lng)}:20:all`)
+    }
+    return shop
   },
 
   async updateRating(shopId, avgRating, totalReviews) {

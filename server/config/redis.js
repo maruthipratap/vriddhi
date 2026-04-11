@@ -24,4 +24,32 @@ export async function connectRedis() {
   await redis.connect()
 }
 
+// ── Cache helpers ─────────────────────────────────────────────
+// Silently no-ops if Redis is down — never block the request path.
+
+export async function cacheGet(key) {
+  try {
+    const val = await redis.get(key)
+    return val ? JSON.parse(val) : null
+  } catch {
+    return null
+  }
+}
+
+export async function cacheSet(key, value, ttlSeconds) {
+  try {
+    await redis.set(key, JSON.stringify(value), { EX: ttlSeconds })
+  } catch {
+    // non-blocking
+  }
+}
+
+export async function cacheDel(key) {
+  try {
+    await redis.del(key)
+  } catch {
+    // non-blocking
+  }
+}
+
 export default redis

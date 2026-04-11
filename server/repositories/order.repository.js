@@ -43,6 +43,11 @@ const orderRepository = {
     return { orders, total, page, totalPages: Math.ceil(total / limit) }
   },
 
+  // Unpaginated — for dashboard stats/aggregations only
+  async findAllByShop(shopId, filters = {}) {
+    return Order.find({ shopId, ...filters }).sort({ createdAt: -1 })
+  },
+
   async findByRazorpayOrderId(razorpayOrderId) {
     return Order.findOne({ razorpayOrderId })
   },
@@ -76,6 +81,26 @@ const orderRepository = {
             note:      `Payment ${paymentStatus}`,
             timestamp: new Date(),
           }
+        },
+      },
+      { new: true }
+    )
+  },
+
+  async updateRefundStatus(orderId, refundStatus, razorpayRefundId = null) {
+    return Order.findByIdAndUpdate(
+      orderId,
+      {
+        $set: {
+          refundStatus,
+          ...(razorpayRefundId && { razorpayRefundId }),
+        },
+        $push: {
+          timeline: {
+            status:    `refund_${refundStatus}`,
+            note:      `Refund ${refundStatus}`,
+            timestamp: new Date(),
+          },
         },
       },
       { new: true }

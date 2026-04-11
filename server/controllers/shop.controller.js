@@ -155,6 +155,76 @@ export async function updateShop(req, res, next) {
   }
 }
 
+// ── Shop analytics ────────────────────────────────────────────
+// GET /shops/my/analytics?days=7
+export async function getShopAnalytics(req, res, next) {
+  try {
+    const shop = await shopRepository.findByUserId(req.user.id)
+    if (!shop) {
+      return res.status(404).json({ success: false, message: 'Shop not found', code: 'SHOP_NOT_FOUND' })
+    }
+
+    const days    = Math.min(30, parseInt(req.query.days) || 7)
+    const since   = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+
+    const Order = (await import('../models/Order.js')).default
+
+    const [revenueTrend, statusBreakdown, topProducts] = await Promise.all([
+      // Revenue by day for last N days
+      Order.aggregate([
+        { $match: {
+            shopId:        shop._id,
+            createdAt:     { $gte: since },
+            paymentStatus: { $in: ['paid'] },
+        }},
+        { $group: {
+            _id:     { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+            revenue: { $sum: '$pricing.total' },
+            orders:  { $sum: 1 },
+        }},
+        { $sort: { _id: 1 } },
+        { $project: { _id: 0, date: '$_id', revenue: 1, orders: 1 } },
+      ]),
+
+      // Orders count by status
+      Order.aggregate([
+        { $match: { shopId: shop._id } },
+        { $group: { _id: '$status', count: { $sum: 1 } } },
+        { $project: { _id: 0, status: '$_id', count: 1 } },
+      ]),
+
+      // Top 5 products by revenue
+      Order.aggregate([
+        { $match: { shopId: shop._id, status: { $ne: 'cancelled' } } },
+        { $unwind: '$items' },
+        { $group: {
+            _id:      '$items.productName',
+            revenue:  { $sum: '$items.subtotal' },
+            unitsSold:{ $sum: '$items.quantity' },
+        }},
+        { $sort: { revenue: -1 } },
+        { $limit: 5 },
+        { $project: { _id: 0, name: '$_id', revenue: 1, unitsSold: 1 } },
+      ]),
+    ])
+
+    // Fill missing days in revenue trend with 0 so the chart is continuous
+    const dateMap = Object.fromEntries(revenueTrend.map(d => [d.date, d]))
+    const filledTrend = Array.from({ length: days }, (_, i) => {
+      const d    = new Date(since.getTime() + i * 86400000)
+      const key  = d.toISOString().slice(0, 10)
+      return dateMap[key] || { date: key, revenue: 0, orders: 0 }
+    })
+
+    res.status(200).json({
+      success: true,
+      data: { revenueTrend: filledTrend, statusBreakdown, topProducts, days },
+    })
+  } catch (err) {
+    next(err)
+  }
+}
+
 export async function getShopDashboard(req, res, next) {
   try {
     const shop = await shopRepository.findByUserId(req.user.id)
@@ -168,7 +238,7 @@ export async function getShopDashboard(req, res, next) {
 
     const [products, orders, mandi] = await Promise.all([
       productRepository.findByShopId(shop._id),
-      orderRepository.findByShop(shop._id),
+      orderRepository.findAllByShop(shop._id),
       mandiService.getMandiPrices({
         district: shop.address?.district || '',
         state: shop.address?.state || '',

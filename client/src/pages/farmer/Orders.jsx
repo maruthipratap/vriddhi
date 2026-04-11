@@ -4,6 +4,79 @@ import { fetchMyOrders }                     from '../../store/slices/orderSlice
 import reviewService                         from '../../services/review.service.js'
 import IconGlyph                             from '../../components/common/IconGlyph.jsx'
 
+// ── Order timeline steps in display order ─────────────────────
+const STEPS = [
+  { key: 'pending',          label: 'Placed'      },
+  { key: 'confirmed',        label: 'Confirmed'   },
+  { key: 'processing',       label: 'Processing'  },
+  { key: 'ready',            label: 'Ready'       },
+  { key: 'out_for_delivery', label: 'On the way'  },
+  { key: 'delivered',        label: 'Delivered'   },
+]
+
+function OrderTimeline({ order }) {
+  const [open, setOpen] = useState(false)
+  if (order.status === 'cancelled') return null
+
+  const currentIdx = STEPS.findIndex(s => s.key === order.status)
+  const timelineMap = Object.fromEntries(
+    (order.timeline || []).map(t => [t.status, t.timestamp])
+  )
+
+  return (
+    <div className="mt-3">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex w-full items-center justify-between text-xs text-muted-foreground hover:text-foreground"
+      >
+        <span>Track order</span>
+        <span>{open ? '▲' : '▼'}</span>
+      </button>
+
+      {open && (
+        <div className="mt-3 overflow-x-auto">
+          <div className="flex min-w-max items-start gap-0">
+            {STEPS.map((step, idx) => {
+              const done    = idx <= currentIdx
+              const current = idx === currentIdx
+              const ts      = timelineMap[step.key]
+              return (
+                <div key={step.key} className="flex flex-col items-center">
+                  <div className="flex items-center">
+                    {/* Circle */}
+                    <div className={`flex h-7 w-7 items-center justify-center rounded-full border-2 text-xs font-bold transition-colors ${
+                      current ? 'border-primary bg-primary text-white' :
+                      done    ? 'border-green-500 bg-green-500 text-white' :
+                                'border-border bg-background text-muted-foreground'
+                    }`}>
+                      {done && !current ? '✓' : idx + 1}
+                    </div>
+                    {/* Connector */}
+                    {idx < STEPS.length - 1 && (
+                      <div className={`h-0.5 w-10 ${idx < currentIdx ? 'bg-green-500' : 'bg-border'}`} />
+                    )}
+                  </div>
+                  <p className={`mt-1 w-14 text-center text-[10px] leading-tight ${
+                    current ? 'font-semibold text-primary' :
+                    done    ? 'text-foreground' : 'text-muted-foreground'
+                  }`}>
+                    {step.label}
+                  </p>
+                  {ts && (
+                    <p className="mt-0.5 text-[9px] text-muted-foreground">
+                      {new Date(ts).toLocaleDateString('en-IN', { day:'numeric', month:'short' })}
+                    </p>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 const STATUS_COLORS = {
   pending:          'badge-gold',
   confirmed:        'badge-green',
@@ -201,6 +274,8 @@ export default function Orders() {
                     Rs {(order.pricing.total / 100).toFixed(0)}
                   </p>
                 </div>
+
+                <OrderTimeline order={order} />
 
                 {/* Rate button — only for delivered orders not yet reviewed */}
                 {order.status === 'delivered' && !reviewed.has(order._id) && (

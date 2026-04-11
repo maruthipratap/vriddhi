@@ -100,6 +100,12 @@ const orderSchema = new mongoose.Schema(
     // Razorpay fields
     razorpayOrderId:   { type: String, default: null },
     razorpayPaymentId: { type: String, default: null },
+    razorpayRefundId:  { type: String, default: null },
+    refundStatus: {
+      type:    String,
+      enum:    ['none', 'initiated', 'processed', 'failed'],
+      default: 'none',
+    },
 
     deliveryType: {
       type: String,

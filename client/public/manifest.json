@@ -1,0 +1,41 @@
+{
+  "name": "Vriddhi — Agri Marketplace",
+  "short_name": "Vriddhi",
+  "description": "India's hyperlocal agri marketplace — buy inputs, check mandi prices, identify crop diseases.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#16a34a",
+  "lang": "en-IN",
+  "categories": ["agriculture", "shopping", "food"],
+  "icons": [
+    {
+      "src": "/favicon-plant.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Nearby Shops",
+      "short_name": "Shops",
+      "url": "/farmer/shops",
+      "description": "Find agri-input shops near you"
+    },
+    {
+      "name": "Mandi Prices",
+      "short_name": "Mandi",
+      "url": "/farmer/mandi",
+      "description": "Today's crop market prices"
+    },
+    {
+      "name": "Disease AI",
+      "short_name": "AI",
+      "url": "/farmer/ai",
+      "description": "Identify crop diseases with AI"
+    }
+  ]
+}
