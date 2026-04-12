@@ -7,10 +7,11 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon-plant.svg'],
       manifest: false, // we ship our own public/manifest.json
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,jpg,woff2}'],
+        // Exclude SVGs from precache — favicon-plant.svg is 8 MB
+        globPatterns: ['**/*.{js,css,html,png,jpg,woff2}'],
+        globIgnores: ['**/favicon-plant.svg'],
         // Don't cache API calls — always network-first for data
         runtimeCaching: [
           {
