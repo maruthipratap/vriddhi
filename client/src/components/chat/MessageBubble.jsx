@@ -1,4 +1,6 @@
-export default function MessageBubble({ message, isMe }) {
+import { memo } from 'react'
+
+function MessageBubble({ message, isMe }) {
   const time = new Date(message.createdAt).toLocaleTimeString('en-IN', {
     hour: '2-digit', minute: '2-digit'
   })
@@ -37,3 +39,5 @@ export default function MessageBubble({ message, isMe }) {
     </div>
   )
 }
+
+export default memo(MessageBubble)

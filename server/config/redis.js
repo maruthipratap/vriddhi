@@ -21,7 +21,11 @@ redis.on('error',        (err) => console.error('❌ Redis error:', err.message)
 redis.on('reconnecting', ()    => console.log('🔄 Redis reconnecting...'))
 
 export async function connectRedis() {
-  await redis.connect()
+  try {
+    await redis.connect()
+  } catch (err) {
+    console.warn('Redis: connection failed at startup (non-fatal):', err.message)
+  }
 }
 
 // ── Cache helpers ─────────────────────────────────────────────

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
+import { useWindowVirtualizer } from '@tanstack/react-virtual'
 import {
   createForumPost,
   getForumPosts,
@@ -171,6 +172,13 @@ export default function Forum() {
     }
   }
 
+  const virtualizer = useWindowVirtualizer({
+    count: posts.length,
+    estimateSize: () => 180,
+    overscan: 5,
+  })
+  const virtualItems = virtualizer.getVirtualItems()
+
   return (
     <div className="dashboard-page">
       <div className="page-header rounded-b-[2rem] shadow-sm">
@@ -266,103 +274,114 @@ export default function Forum() {
             No questions yet in this category. Be the first to ask one.
           </div>
         ) : (
-          <div className="space-y-4">
-            {posts.map((post) => {
+          <div
+            style={{ height: virtualizer.getTotalSize(), position: 'relative' }}
+          >
+            {virtualItems.map((virtualRow) => {
+              const post = posts[virtualRow.index]
               const authorId = String(post.authorId || '')
               const currentUserId = String(user?.id || user?._id || '')
               const isAuthor = authorId === currentUserId
               const isExpanded = expandedPostId === post._id
-              const categoryLabel = categories.find((category) => category.value === post.category)?.label || 'General'
+              const categoryLabel = categories.find((c) => c.value === post.category)?.label || 'General'
 
               return (
-                <div key={post._id} className="panel p-5">
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded-full bg-secondary px-3 py-1 text-xs font-medium text-primary">
-                          {categoryLabel}
-                        </span>
-                        {post.isSolved && (
-                          <span className="badge-green">Solved</span>
-                        )}
-                        {post.cropType && (
-                          <span className="rounded-full bg-white border border-border px-3 py-1 text-xs font-medium text-muted-foreground">
-                            {post.cropType}
+                <div
+                  key={post._id}
+                  data-index={virtualRow.index}
+                  ref={virtualizer.measureElement}
+                  style={{ position: 'absolute', top: virtualRow.start, left: 0, right: 0 }}
+                  className="pb-4"
+                >
+                  <div className="panel p-5">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="rounded-full bg-secondary px-3 py-1 text-xs font-medium text-primary">
+                            {categoryLabel}
                           </span>
+                          {post.isSolved && (
+                            <span className="badge-green">Solved</span>
+                          )}
+                          {post.cropType && (
+                            <span className="rounded-full bg-white border border-border px-3 py-1 text-xs font-medium text-muted-foreground">
+                              {post.cropType}
+                            </span>
+                          )}
+                        </div>
+                        <h2 className="mt-3 text-xl font-heading text-foreground">{post.title}</h2>
+                        <p className="mt-3 text-sm leading-7 text-muted-foreground">{post.content}</p>
+                        <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+                          <span>{post.authorName}</span>
+                          {post.location?.district && <span>{post.location.district}</span>}
+                          <span>{timeAgo(post.createdAt)}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2 lg:w-[220px] lg:flex-col">
+                        <button
+                          onClick={() => handleUpvote(post._id)}
+                          disabled={!!actionState[`upvote-${post._id}`]}
+                          className={`btn-outline justify-center ${post.isUpvoted ? 'border-primary text-primary bg-secondary' : ''}`}
+                        >
+                          {post.isUpvoted ? 'Upvoted' : 'Upvote'} ({post.upvotes || 0})
+                        </button>
+                        <button
+                          onClick={() => setExpandedPostId(isExpanded ? '' : post._id)}
+                          className="btn-outline justify-center"
+                        >
+                          Replies ({post.replyCount || post.replies?.length || 0})
+                        </button>
+                        {isAuthor && (
+                          <button
+                            onClick={() => handleSolve(post._id)}
+                            disabled={!!actionState[`solve-${post._id}`]}
+                            className="btn-primary justify-center"
+                          >
+                            {post.isSolved ? 'Mark Open' : 'Mark Solved'}
+                          </button>
                         )}
                       </div>
-                      <h2 className="mt-3 text-xl font-heading text-foreground">{post.title}</h2>
-                      <p className="mt-3 text-sm leading-7 text-muted-foreground">{post.content}</p>
-                      <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-                        <span>{post.authorName}</span>
-                        {post.location?.district && <span>{post.location.district}</span>}
-                        <span>{timeAgo(post.createdAt)}</span>
-                      </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-2 lg:w-[220px] lg:flex-col">
-                      <button
-                        onClick={() => handleUpvote(post._id)}
-                        disabled={!!actionState[`upvote-${post._id}`]}
-                        className={`btn-outline justify-center ${post.isUpvoted ? 'border-primary text-primary bg-secondary' : ''}`}
-                      >
-                        {post.isUpvoted ? 'Upvoted' : 'Upvote'} ({post.upvotes || 0})
-                      </button>
-                      <button
-                        onClick={() => setExpandedPostId(isExpanded ? '' : post._id)}
-                        className="btn-outline justify-center"
-                      >
-                        Replies ({post.replyCount || post.replies?.length || 0})
-                      </button>
-                      {isAuthor && (
-                        <button
-                          onClick={() => handleSolve(post._id)}
-                          disabled={!!actionState[`solve-${post._id}`]}
-                          className="btn-primary justify-center"
-                        >
-                          {post.isSolved ? 'Mark Open' : 'Mark Solved'}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {isExpanded && (
-                    <div className="mt-5 border-t border-border pt-5">
-                      <div className="space-y-3">
-                        {(post.replies || []).length ? (
-                          post.replies.map((reply, index) => (
-                            <div key={`${post._id}-reply-${index}`} className="rounded-2xl bg-secondary p-4">
-                              <div className="flex items-center justify-between gap-3">
-                                <p className="text-sm font-medium text-foreground">{reply.authorName}</p>
-                                <p className="text-xs text-muted-foreground">{timeAgo(reply.createdAt)}</p>
+                    {isExpanded && (
+                      <div className="mt-5 border-t border-border pt-5">
+                        <div className="space-y-3">
+                          {(post.replies || []).length ? (
+                            post.replies.map((reply, index) => (
+                              <div key={`${post._id}-reply-${index}`} className="rounded-2xl bg-secondary p-4">
+                                <div className="flex items-center justify-between gap-3">
+                                  <p className="text-sm font-medium text-foreground">{reply.authorName}</p>
+                                  <p className="text-xs text-muted-foreground">{timeAgo(reply.createdAt)}</p>
+                                </div>
+                                <p className="mt-2 text-sm text-muted-foreground">{reply.content}</p>
                               </div>
-                              <p className="mt-2 text-sm text-muted-foreground">{reply.content}</p>
+                            ))
+                          ) : (
+                            <div className="rounded-2xl border border-dashed border-border bg-white p-4 text-sm text-muted-foreground">
+                              No replies yet. Start the discussion.
                             </div>
-                          ))
-                        ) : (
-                          <div className="rounded-2xl border border-dashed border-border bg-white p-4 text-sm text-muted-foreground">
-                            No replies yet. Start the discussion.
-                          </div>
-                        )}
-                      </div>
+                          )}
+                        </div>
 
-                      <div className="mt-4 flex gap-3">
-                        <textarea
-                          className="input min-h-20 resize-none"
-                          placeholder="Write a helpful reply..."
-                          value={replyDrafts[post._id] || ''}
-                          onChange={(e) => setReplyDrafts((current) => ({ ...current, [post._id]: e.target.value }))}
-                        />
-                        <button
-                          onClick={() => handleReply(post._id)}
-                          disabled={!!actionState[`reply-${post._id}`]}
-                          className="btn-primary self-end"
-                        >
-                          {actionState[`reply-${post._id}`] ? 'Replying...' : 'Reply'}
-                        </button>
+                        <div className="mt-4 flex gap-3">
+                          <textarea
+                            className="input min-h-20 resize-none"
+                            placeholder="Write a helpful reply..."
+                            value={replyDrafts[post._id] || ''}
+                            onChange={(e) => setReplyDrafts((current) => ({ ...current, [post._id]: e.target.value }))}
+                          />
+                          <button
+                            onClick={() => handleReply(post._id)}
+                            disabled={!!actionState[`reply-${post._id}`]}
+                            className="btn-primary self-end"
+                          >
+                            {actionState[`reply-${post._id}`] ? 'Replying...' : 'Reply'}
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               )
             })}

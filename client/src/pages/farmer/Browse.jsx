@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Link, useSearchParams } from 'react-router-dom'
 import { fetchNearbyProducts } from '../../store/slices/productSlice.js'
@@ -27,6 +27,9 @@ export default function Browse() {
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState(params.get('category') || '')
 
+  const handleSearchChange = useCallback((e) => setSearch(e.target.value), [])
+  const handleCategoryChange = useCallback((value) => setCategory(value), [])
+
   useEffect(() => {
     if (location) dispatch(fetchNearbyProducts({ ...location, category, search }))
   }, [dispatch, location, category, search])
@@ -43,7 +46,7 @@ export default function Browse() {
           type="text"
           placeholder="Search seeds, fertilizers, brands..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={handleSearchChange}
         />
       </div>
 
@@ -53,7 +56,7 @@ export default function Browse() {
             {categories.map((cat) => (
               <button
                 key={cat.value}
-                onClick={() => setCategory(cat.value)}
+                onClick={() => handleCategoryChange(cat.value)}
                 className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${
                   category === cat.value
                     ? 'border-primary bg-primary text-primary-foreground'

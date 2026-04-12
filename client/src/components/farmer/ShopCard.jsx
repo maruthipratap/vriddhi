@@ -1,7 +1,8 @@
+import { memo } from 'react'
 import { Link } from 'react-router-dom'
 import IconGlyph from '../common/IconGlyph.jsx'
 
-export default function ShopCard({ shop }) {
+function ShopCard({ shop }) {
   return (
     <Link
       to={`/browse?shop=${shop.slug}`}
@@ -59,3 +60,5 @@ export default function ShopCard({ shop }) {
     </Link>
   )
 }
+
+export default memo(ShopCard)

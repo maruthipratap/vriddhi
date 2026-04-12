@@ -1,15 +1,15 @@
-import { Link }        from 'react-router-dom'
-import { useDispatch } from 'react-redux'
-import { addToCart }   from '../../store/slices/orderSlice.js'
-import { useState }    from 'react'
-import IconGlyph from '../common/IconGlyph.jsx'
-import { CATEGORY_ICON_NAMES } from '../../utils/iconMaps.js'
+import { Link }                    from 'react-router-dom'
+import { useDispatch }             from 'react-redux'
+import { addToCart }               from '../../store/slices/orderSlice.js'
+import { useState, useCallback, memo } from 'react'
+import IconGlyph                   from '../common/IconGlyph.jsx'
+import { CATEGORY_ICON_NAMES }     from '../../utils/iconMaps.js'
 
-export default function ProductCard({ product, showAddToCart = true }) {
+function ProductCard({ product, showAddToCart = true }) {
   const dispatch   = useDispatch()
   const [added, setAdded] = useState(false)
 
-  const handleAdd = (e) => {
+  const handleAdd = useCallback((e) => {
     e.preventDefault()
     dispatch(addToCart({
       productId:   product._id,
@@ -21,7 +21,7 @@ export default function ProductCard({ product, showAddToCart = true }) {
     }))
     setAdded(true)
     setTimeout(() => setAdded(false), 1500)
-  }
+  }, [dispatch, product])
 
   return (
     <Link to={`/products/${product._id}`} className="card hover:border-forest
@@ -85,3 +85,5 @@ export default function ProductCard({ product, showAddToCart = true }) {
     </Link>
   )
 }
+
+export default memo(ProductCard)
