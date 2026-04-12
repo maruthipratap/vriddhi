@@ -2,6 +2,7 @@ import shopRepository    from '../repositories/shop.repository.js'
 import productRepository from '../repositories/product.repository.js'
 import orderRepository   from '../repositories/order.repository.js'
 import mandiService      from '../services/mandi.service.js'
+import { sendShopVerificationAlert } from '../services/notification.service.js'
 import {
   createShopSchema,
   updateShopSchema,
@@ -48,6 +49,12 @@ export async function createShop(req, res, next) {
       message: 'Shop registered successfully. Pending verification.',
       data:    { shop },
     })
+
+    // Fire-and-forget — alert admin to verify the new shop
+    sendShopVerificationAlert({
+      shopName:  shop.shopName,
+      ownerName: req.user.name || req.user.email,
+    }).catch(() => {})
   } catch (err) {
     next(err)
   }

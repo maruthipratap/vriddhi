@@ -1,6 +1,9 @@
 import authService   from '../services/auth.service.js'
 import tokenService  from '../services/token.service.js'
-import { sendPasswordResetEmail } from '../services/notification.service.js'
+import {
+  sendPasswordResetEmail,
+  sendWelcomeEmail,
+} from '../services/notification.service.js'
 import {
   registerSchema,
   loginSchema,
@@ -37,6 +40,9 @@ export async function register(req, res, next) {
         accessToken: tokens.accessToken,
       }
     })
+
+    // 5. Fire-and-forget welcome email (never delays the response)
+    sendWelcomeEmail({ name: user.name, email: user.email }).catch(() => {})
   } catch (err) {
     next(err)
   }

@@ -5,6 +5,10 @@ import config            from '../config/index.js'
 import orderRepository   from '../repositories/order.repository.js'
 import productRepository from '../repositories/product.repository.js'
 import shopRepository    from '../repositories/shop.repository.js'
+import {
+  sendNewOrderEmail,
+  sendOrderStatusEmail,
+} from './notification.service.js'
 
 const razorpay = new Razorpay({
   key_id:     config.razorpay.keyId,
@@ -164,6 +168,9 @@ const orderService = {
     // 9. Update shop order count async
     shopRepository.incrementOrderCount(shopId).catch(console.error)
 
+    // 10. Fire-and-forget email notifications (never delay the response)
+    notifyOrderPlaced({ farmerId, shop, order, paymentMethod }).catch(() => {})
+
     return {
       order,
       razorpayOrder,  // null for COD
@@ -206,6 +213,9 @@ const orderService = {
     await orderRepository.updatePaymentStatus(
       order._id, 'paid', razorpayPaymentId
     )
+
+    // Notify farmer — payment confirmed
+    notifyFarmerStatus(order.farmerId, { ...order.toObject(), status: 'confirmed' }).catch(() => {})
 
     return { order, message: 'Payment verified successfully' }
   },
@@ -270,7 +280,12 @@ const orderService = {
       throw err
     }
 
-    return orderRepository.updateStatus(orderId, newStatus, note, userId)
+    const updated = await orderRepository.updateStatus(orderId, newStatus, note, userId)
+
+    // Notify farmer of the status change
+    notifyFarmerStatus(order.farmerId, updated).catch(() => {})
+
+    return updated
   },
 
   // ── Cancel order ─────────────────────────────────────────────
@@ -323,8 +338,51 @@ const orderService = {
         })
     }
 
+    // Notify farmer of cancellation
+    notifyFarmerStatus(order.farmerId, { ...order.toObject(), status: 'cancelled' }).catch(() => {})
+
     return updatedOrder
   },
+}
+
+// ── Notification helpers ──────────────────────────────────────
+// Look up user email from DB and send — all errors swallowed so
+// a mailer failure never propagates to the caller.
+
+async function getUserEmail(userId) {
+  const User = (await import('../models/User.js')).default
+  return User.findById(userId).select('name email').lean()
+}
+
+async function notifyOrderPlaced({ farmerId, shop, order, paymentMethod }) {
+  // Notify shop owner of new order
+  const shopOwner = await getUserEmail(shop.userId)
+  if (shopOwner) {
+    await sendNewOrderEmail(
+      { name: shopOwner.name, email: shopOwner.email },
+      { orderNumber: order.orderNumber, total: order.pricing.total }
+    )
+  }
+  // For COD, also notify farmer their order is confirmed
+  if (paymentMethod === 'cod') {
+    const farmer = await getUserEmail(farmerId)
+    if (farmer) {
+      await sendOrderStatusEmail(
+        { name: farmer.name, email: farmer.email },
+        { orderNumber: order.orderNumber, status: 'confirmed' }
+      )
+    }
+  }
+}
+
+async function notifyFarmerStatus(farmerId, order) {
+  const farmer = await getUserEmail(farmerId)
+  if (farmer) {
+    await sendOrderStatusEmail(
+      { name: farmer.name, email: farmer.email },
+      { orderNumber: order.orderNumber, status: order.status }
+    )
+  }
 }
 
 // ── Helpers ───────────────────────────────────────────────────
