@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import { useEffect, useRef, useState, lazy, Suspense } from 'react'
 import { refreshToken } from './store/slices/authSlice.js'
 import { useSocket } from './hooks/useSocket.js'
+import { subscribeToPush } from './services/push.service.js'
 
 // ── Layout & Common Components ────────────────────────────────
 import DashboardLayout from './components/common/DashboardLayout.jsx'
@@ -129,6 +130,13 @@ export default function App() {
     didBootstrapAuth.current = true
     dispatch(refreshToken()).finally(() => setInit(true))
   }, [dispatch])
+
+  // Subscribe to push notifications once logged in
+  useEffect(() => {
+    if (accessToken) {
+      subscribeToPush().catch(() => {})
+    }
+  }, [accessToken])
 
   // Show generic loader until auth is checked
   if (!initialized) return <Loader icon="sprout" text="Loading Vriddhi..." fullScreen={true} />

@@ -9,6 +9,7 @@ import {
   sendNewOrderEmail,
   sendOrderStatusEmail,
 } from './notification.service.js'
+import { sendPushToUser } from './push.service.js'
 
 const razorpay = new Razorpay({
   key_id:     config.razorpay.keyId,
@@ -355,13 +356,18 @@ async function getUserEmail(userId) {
 }
 
 async function notifyOrderPlaced({ farmerId, shop, order, paymentMethod }) {
-  // Notify shop owner of new order
+  // Notify shop owner — email + push
   const shopOwner = await getUserEmail(shop.userId)
   if (shopOwner) {
     await sendNewOrderEmail(
       { name: shopOwner.name, email: shopOwner.email },
       { orderNumber: order.orderNumber, total: order.pricing.total }
     )
+    sendPushToUser(shop.userId, {
+      title: 'New Order',
+      body:  `Order ${order.orderNumber} received — ₹${(order.pricing.total / 100).toFixed(0)}`,
+      url:   '/shop/orders',
+    }).catch(() => {})
   }
   // For COD, also notify farmer their order is confirmed
   if (paymentMethod === 'cod') {
@@ -371,6 +377,11 @@ async function notifyOrderPlaced({ farmerId, shop, order, paymentMethod }) {
         { name: farmer.name, email: farmer.email },
         { orderNumber: order.orderNumber, status: 'confirmed' }
       )
+      sendPushToUser(farmerId, {
+        title: 'Order Confirmed',
+        body:  `Your order ${order.orderNumber} has been confirmed.`,
+        url:   '/farmer/orders',
+      }).catch(() => {})
     }
   }
 }
@@ -382,6 +393,11 @@ async function notifyFarmerStatus(farmerId, order) {
       { name: farmer.name, email: farmer.email },
       { orderNumber: order.orderNumber, status: order.status }
     )
+    sendPushToUser(farmerId, {
+      title: `Order ${order.status.charAt(0).toUpperCase() + order.status.slice(1)}`,
+      body:  `Your order ${order.orderNumber} is now ${order.status}.`,
+      url:   '/farmer/orders',
+    }).catch(() => {})
   }
 }
 

@@ -16,7 +16,8 @@ export default defineConfig({
       workbox: {
         // Exclude SVGs from precache — favicon-plant.svg is 8 MB
         globPatterns: ['**/*.{js,css,html,png,jpg,woff2}'],
-        globIgnores: ['**/favicon-plant.svg'],
+        globIgnores: ['**/favicon-plant.svg', '**/sw-push.js'],
+        importScripts: ['/sw-push.js'],
         // Don't cache API calls — always network-first for data
         runtimeCaching: [
           {
