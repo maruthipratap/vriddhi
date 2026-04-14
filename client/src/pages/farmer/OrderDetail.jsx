@@ -1,7 +1,8 @@
-import { useEffect }          from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchOrderById }    from '../../store/slices/orderSlice.js'
+import api                   from '../../services/api.js'
 import IconGlyph             from '../../components/common/IconGlyph.jsx'
 
 const STEPS = [
@@ -27,6 +28,17 @@ function fmt(paise) {
   return `₹${(paise / 100).toFixed(0)}`
 }
 
+const RETURN_WINDOW_DAYS = 7
+
+function canRequestReturn(order) {
+  if (order.status !== 'delivered') return false
+  if (order.returnRequest?.status)  return false
+  const deliveredEntry = [...(order.timeline || [])].reverse()
+    .find(t => t.status === 'delivered')
+  const deliveredAt = deliveredEntry?.timestamp || order.updatedAt
+  return (Date.now() - new Date(deliveredAt).getTime()) / 86400000 <= RETURN_WINDOW_DAYS
+}
+
 export default function OrderDetail() {
   const { id }   = useParams()
   const dispatch = useDispatch()
@@ -34,9 +46,33 @@ export default function OrderDetail() {
   const order    = useSelector(s => s.orders.current)
   const loading  = useSelector(s => s.orders.isLoading)
 
+  const [showReturnModal, setShowReturnModal] = useState(false)
+  const [returnReason,    setReturnReason]    = useState('')
+  const [submitting,      setSubmitting]      = useState(false)
+  const [returnError,     setReturnError]     = useState('')
+
   useEffect(() => {
     dispatch(fetchOrderById(id))
   }, [dispatch, id])
+
+  async function submitReturn() {
+    if (returnReason.trim().length < 5) {
+      setReturnError('Please describe the reason (min 5 characters).')
+      return
+    }
+    setSubmitting(true)
+    setReturnError('')
+    try {
+      await api.post(`/orders/${id}/return`, { reason: returnReason })
+      setShowReturnModal(false)
+      setReturnReason('')
+      dispatch(fetchOrderById(id))
+    } catch (err) {
+      setReturnError(err.response?.data?.message || 'Failed to submit return request.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   if (loading || !order || order._id !== id) {
     return (
@@ -217,8 +253,8 @@ export default function OrderDetail() {
         {order.status === 'cancelled' && (
           <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-4">
             <p className="font-semibold text-destructive text-sm">Order Cancelled</p>
-            {order.cancellation?.reason && (
-              <p className="mt-1 text-xs text-muted-foreground">Reason: {order.cancellation.reason}</p>
+            {order.cancelReason && (
+              <p className="mt-1 text-xs text-muted-foreground">Reason: {order.cancelReason}</p>
             )}
             {order.refundStatus && order.refundStatus !== 'none' && (
               <p className="mt-1 text-xs text-muted-foreground capitalize">
@@ -227,7 +263,82 @@ export default function OrderDetail() {
             )}
           </div>
         )}
+
+        {/* Return request status */}
+        {order.returnRequest?.status && (
+          <div className={`rounded-xl border p-4 ${
+            order.returnRequest.status === 'approved' ? 'border-green-200 bg-green-50' :
+            order.returnRequest.status === 'rejected' ? 'border-red-200 bg-red-50' :
+                                                        'border-amber-200 bg-amber-50'
+          }`}>
+            <p className="font-semibold text-foreground text-sm">
+              Return {order.returnRequest.status === 'requested' ? 'Pending Review'
+                    : order.returnRequest.status === 'approved'  ? 'Approved'
+                    : 'Rejected'}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Reason: {order.returnRequest.reason}
+            </p>
+            {order.returnRequest.note && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                Shop note: {order.returnRequest.note}
+              </p>
+            )}
+            {order.returnRequest.status === 'approved' && order.refundStatus !== 'none' && (
+              <p className="mt-1 text-xs font-medium text-green-700 capitalize">
+                Refund: {order.refundStatus}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Request return button */}
+        {canRequestReturn(order) && (
+          <button
+            onClick={() => setShowReturnModal(true)}
+            className="w-full rounded-xl border border-amber-300 bg-amber-50 py-3 text-sm font-semibold text-amber-800 hover:bg-amber-100 transition-colors"
+          >
+            Request Return / Refund
+          </button>
+        )}
       </div>
+
+      {/* Return modal */}
+      {showReturnModal && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
+          <div className="w-full max-w-md rounded-2xl bg-background p-6 shadow-xl">
+            <h3 className="text-lg font-bold text-foreground">Request Return</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Tell the shop why you want to return this order.
+            </p>
+            <textarea
+              className="mt-4 w-full rounded-xl border border-border bg-secondary p-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              rows={4}
+              placeholder="e.g. Wrong product delivered, damaged items..."
+              value={returnReason}
+              onChange={e => setReturnReason(e.target.value)}
+            />
+            {returnError && (
+              <p className="mt-2 text-xs text-destructive">{returnError}</p>
+            )}
+            <div className="mt-4 flex gap-3">
+              <button
+                onClick={() => { setShowReturnModal(false); setReturnReason(''); setReturnError('') }}
+                className="flex-1 rounded-xl border border-border py-2.5 text-sm font-medium text-foreground hover:bg-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitReturn}
+                disabled={submitting}
+                className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+              >
+                {submitting ? 'Submitting…' : 'Submit Request'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -294,6 +294,105 @@ const orderService = {
     return updated
   },
 
+  // ── Request return (farmer only, delivered orders ≤ 7 days) ──
+  async requestReturn(orderId, farmerId, reason) {
+    const order = await orderRepository.findByIdAndFarmer(orderId, farmerId)
+    if (!order) {
+      const err = new Error('Order not found'); err.status = 404; throw err
+    }
+
+    if (order.status !== 'delivered') {
+      const err = new Error('Only delivered orders can be returned')
+      err.status = 400; err.code = 'CANNOT_RETURN'; throw err
+    }
+
+    if (order.returnRequest?.status) {
+      const err = new Error('A return request already exists for this order')
+      err.status = 400; err.code = 'RETURN_ALREADY_EXISTS'; throw err
+    }
+
+    // 7-day return window
+    const deliveredEntry = order.timeline?.slice().reverse()
+      .find(t => t.status === 'delivered')
+    const deliveredAt = deliveredEntry?.timestamp || order.updatedAt
+    const daysSince   = (Date.now() - new Date(deliveredAt).getTime()) / 86400000
+
+    if (daysSince > 7) {
+      const err = new Error('Return window of 7 days has expired')
+      err.status = 400; err.code = 'RETURN_WINDOW_EXPIRED'; throw err
+    }
+
+    const updated = await orderRepository.setReturnRequest(orderId, {
+      reason,
+      requestedAt: new Date(),
+      status:      'requested',
+    })
+
+    // Notify shop owner
+    const shop = await shopRepository.findById(order.shopId)
+    if (shop) {
+      sendPushToUser(shop.userId, {
+        title: 'Return Requested',
+        body:  `Farmer requested a return for order ${order.orderNumber}.`,
+        url:   '/shop/orders',
+      }).catch(() => {})
+    }
+
+    return updated
+  },
+
+  // ── Resolve return (shop owner: approve or reject) ────────────
+  async resolveReturn(orderId, shopId, decision, note) {
+    const order = await orderRepository.findByIdAndShop(orderId, shopId)
+    if (!order) {
+      const err = new Error('Order not found'); err.status = 404; throw err
+    }
+
+    if (order.returnRequest?.status !== 'requested') {
+      const err = new Error('No pending return request on this order')
+      err.status = 400; err.code = 'NO_PENDING_RETURN'; throw err
+    }
+
+    const updated = await orderRepository.resolveReturnRequest(
+      orderId, decision, note || ''
+    )
+
+    if (decision === 'approved') {
+      // Restore stock
+      const session = await mongoose.startSession()
+      try {
+        await session.withTransaction(async () => {
+          for (const item of order.items) {
+            await productRepository.incrementStock(item.productId, item.quantity, session)
+          }
+        })
+      } finally {
+        await session.endSession()
+      }
+
+      // Trigger Razorpay refund for online payments
+      if (order.paymentStatus === 'paid' && order.razorpayPaymentId) {
+        razorpay.payments
+          .refund(order.razorpayPaymentId, { amount: order.pricing.total })
+          .then(refund => {
+            orderRepository.updateRefundStatus(orderId, 'initiated', refund.id)
+          })
+          .catch(err => {
+            console.error('[return refund] Razorpay failed:', err.message)
+            orderRepository.updateRefundStatus(orderId, 'failed')
+          })
+      }
+
+      // Notify farmer — approved
+      notifyFarmerStatus(order.farmerId, { ...order.toObject(), status: 'returned' }).catch(() => {})
+    } else {
+      // Notify farmer — rejected
+      notifyFarmerStatus(order.farmerId, { ...order.toObject(), status: 'delivered' }).catch(() => {})
+    }
+
+    return updated
+  },
+
   // ── Cancel order ─────────────────────────────────────────────
   async cancelOrder(orderId, userId, userRole, reason) {
     const order = userRole === 'farmer'

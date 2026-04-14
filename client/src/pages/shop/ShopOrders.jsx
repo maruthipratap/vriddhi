@@ -20,25 +20,41 @@ export default function ShopOrders() {
     loadOrders()
   }, [filter])
 
+  const [returnModal, setReturnModal] = useState(null)  // { orderId, orderNumber }
+  const [returnNote,  setReturnNote]  = useState('')
+  const [resolving,   setResolving]   = useState(false)
+
   const handleUpdateStatus = async (orderId, newStatus) => {
     try {
-      await api.patch(
-        `/orders/${orderId}/status`,
-        { status: newStatus, note: `Status updated to ${newStatus}` }
-      )
+      await api.patch(`/orders/${orderId}/status`, { status: newStatus, note: `Status updated to ${newStatus}` })
       loadOrders()
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to update status')
     }
   }
 
+  const handleResolveReturn = async (decision) => {
+    setResolving(true)
+    try {
+      await api.patch(`/orders/${returnModal.orderId}/return`, { decision, note: returnNote })
+      setReturnModal(null)
+      setReturnNote('')
+      loadOrders()
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to resolve return')
+    } finally {
+      setResolving(false)
+    }
+  }
+
   const statuses = [
-    { value: '', label: 'All' },
-    { value: 'pending', label: 'Pending' },
-    { value: 'confirmed', label: 'Confirmed' },
-    { value: 'processing', label: 'Processing' },
-    { value: 'ready', label: 'Ready' },
-    { value: 'delivered', label: 'Delivered' },
+    { value: '',                 label: 'All'            },
+    { value: 'pending',          label: 'Pending'        },
+    { value: 'confirmed',        label: 'Confirmed'      },
+    { value: 'processing',       label: 'Processing'     },
+    { value: 'ready',            label: 'Ready'          },
+    { value: 'delivered',        label: 'Delivered'      },
+    { value: 'return_requested', label: 'Return Requests'},
   ]
 
   return (
@@ -82,10 +98,71 @@ export default function ShopOrders() {
               </p>
             </div>
           ) : (
-            <OrderList orders={orders} onUpdateStatus={handleUpdateStatus} />
+            <>
+            {/* Return request cards — shown above the regular list */}
+            {orders.filter(o => o.status === 'return_requested').map(o => (
+              <div key={o._id} className="panel mb-3 border-amber-200 bg-amber-50 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-amber-700 uppercase tracking-wide mb-1">Return Requested</p>
+                    <p className="font-semibold text-foreground text-sm">{o.orderNumber}</p>
+                    <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
+                      Reason: {o.returnRequest?.reason}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => { setReturnModal({ orderId: o._id, orderNumber: o.orderNumber }); setReturnNote('') }}
+                    className="shrink-0 rounded-xl bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700"
+                  >
+                    Review
+                  </button>
+                </div>
+              </div>
+            ))}
+            <OrderList orders={orders.filter(o => o.status !== 'return_requested')} onUpdateStatus={handleUpdateStatus} />
+          </>
           )}
         </div>
       </div>
+
+      {/* Return resolve modal */}
+      {returnModal && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
+          <div className="w-full max-w-md rounded-2xl bg-background p-6 shadow-xl">
+            <h3 className="text-lg font-bold text-foreground">Review Return Request</h3>
+            <p className="mt-1 text-sm text-muted-foreground">Order {returnModal.orderNumber}</p>
+            <textarea
+              className="mt-4 w-full rounded-xl border border-border bg-secondary p-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              rows={3}
+              placeholder="Optional note to the farmer…"
+              value={returnNote}
+              onChange={e => setReturnNote(e.target.value)}
+            />
+            <div className="mt-4 flex gap-3">
+              <button
+                onClick={() => setReturnModal(null)}
+                className="flex-1 rounded-xl border border-border py-2.5 text-sm font-medium text-foreground hover:bg-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleResolveReturn('rejected')}
+                disabled={resolving}
+                className="flex-1 rounded-xl border border-destructive/40 bg-destructive/10 py-2.5 text-sm font-semibold text-destructive disabled:opacity-60 hover:bg-destructive/20"
+              >
+                Reject
+              </button>
+              <button
+                onClick={() => handleResolveReturn('approved')}
+                disabled={resolving}
+                className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+              >
+                {resolving ? '…' : 'Approve'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

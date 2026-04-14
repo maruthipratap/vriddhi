@@ -107,6 +107,55 @@ const orderRepository = {
     )
   },
 
+  async setReturnRequest(orderId, { reason, requestedAt, status }) {
+    return Order.findByIdAndUpdate(
+      orderId,
+      {
+        $set:  {
+          status:                    'return_requested',
+          'returnRequest.reason':      reason,
+          'returnRequest.requestedAt': requestedAt,
+          'returnRequest.status':      status,
+        },
+        $push: {
+          timeline: {
+            status:    'return_requested',
+            note:      `Return requested: ${reason}`,
+            timestamp: new Date(),
+          },
+        },
+      },
+      { new: true }
+    )
+  },
+
+  async resolveReturnRequest(orderId, decision, note) {
+    const approved   = decision === 'approved'
+    const newStatus  = approved ? 'returned' : 'delivered'
+    return Order.findByIdAndUpdate(
+      orderId,
+      {
+        $set:  {
+          status:                    newStatus,
+          'returnRequest.status':    decision,
+          'returnRequest.resolvedAt': new Date(),
+          'returnRequest.note':      note,
+          ...(approved && { paymentStatus: 'refunded' }),
+        },
+        $push: {
+          timeline: {
+            status:    newStatus,
+            note:      approved
+              ? `Return approved${note ? ': ' + note : ''}`
+              : `Return rejected${note ? ': ' + note : ''}`,
+            timestamp: new Date(),
+          },
+        },
+      },
+      { new: true }
+    )
+  },
+
   async cancelOrder(orderId, cancelledBy, reason, session = null) {
     return Order.findByIdAndUpdate(
       orderId,

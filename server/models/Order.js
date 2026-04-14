@@ -4,6 +4,15 @@ import { z }    from 'zod'
 // ─────────────────────────────────────────────────────────────
 // ZOD SCHEMA
 // ─────────────────────────────────────────────────────────────
+export const returnRequestSchema = z.object({
+  reason: z.string().min(5).max(500),
+})
+
+export const resolveReturnSchema = z.object({
+  decision: z.enum(['approved', 'rejected']),
+  note:     z.string().max(500).optional(),
+})
+
 export const createOrderSchema = z.object({
   shopId: z.string().min(1),
   items: z.array(z.object({
@@ -79,7 +88,7 @@ const orderSchema = new mongoose.Schema(
       enum:    [
         'pending', 'confirmed', 'processing',
         'ready', 'out_for_delivery', 'delivered',
-        'cancelled', 'refunded'
+        'cancelled', 'return_requested', 'returned', 'refunded'
       ],
       default: 'pending',
       index:   true,
@@ -129,6 +138,19 @@ const orderSchema = new mongoose.Schema(
       type: String,
       enum: ['farmer', 'shop', 'admin', 'system'],
       default: null,
+    },
+
+    // Return request lifecycle
+    returnRequest: {
+      reason:      { type: String, default: null },
+      requestedAt: { type: Date,   default: null },
+      status:      {
+        type:    String,
+        enum:    ['requested', 'approved', 'rejected'],
+        default: null,
+      },
+      resolvedAt:  { type: Date,   default: null },
+      note:        { type: String, default: null },  // shop's note on decision
     },
 
     notes: { type: String, default: '' },

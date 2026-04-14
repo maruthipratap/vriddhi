@@ -3,6 +3,8 @@ import shopRepository from '../repositories/shop.repository.js'
 import {
   createOrderSchema,
   verifyPaymentSchema,
+  returnRequestSchema,
+  resolveReturnSchema,
 } from '../models/Order.js'
 
 // ── Create order ──────────────────────────────────────────────
@@ -134,6 +136,49 @@ export async function updateOrderStatus(req, res, next) {
     res.status(200).json({
       success: true,
       message: `Order ${status} successfully`,
+      data:    { order },
+    })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// ── Request return (farmer) ───────────────────────────────────
+export async function requestReturn(req, res, next) {
+  try {
+    const { reason } = returnRequestSchema.parse(req.body)
+    const order = await orderService.requestReturn(
+      req.params.id,
+      req.user.id,
+      reason,
+    )
+    res.status(200).json({
+      success: true,
+      message: 'Return request submitted',
+      data:    { order },
+    })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// ── Resolve return (shop owner: approve / reject) ─────────────
+export async function resolveReturn(req, res, next) {
+  try {
+    const { decision, note } = resolveReturnSchema.parse(req.body)
+    const shop = await shopRepository.findByUserId(req.user.id)
+    if (!shop) {
+      return res.status(404).json({ success: false, message: 'Shop not found', code: 'SHOP_NOT_FOUND' })
+    }
+    const order = await orderService.resolveReturn(
+      req.params.id,
+      shop._id,
+      decision,
+      note,
+    )
+    res.status(200).json({
+      success: true,
+      message: `Return ${decision}`,
       data:    { order },
     })
   } catch (err) {
