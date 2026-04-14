@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchOrderById }    from '../../store/slices/orderSlice.js'
 import api                   from '../../services/api.js'
+import reviewService         from '../../services/review.service.js'
 import IconGlyph             from '../../components/common/IconGlyph.jsx'
 
 const STEPS = [
@@ -51,9 +52,54 @@ export default function OrderDetail() {
   const [submitting,      setSubmitting]      = useState(false)
   const [returnError,     setReturnError]     = useState('')
 
+  // Product reviews
+  const [productRatings,   setProductRatings]   = useState({})  // { productId: { rating, comment } }
+  const [reviewedProducts, setReviewedProducts] = useState(null) // null = not loaded
+  const [reviewSubmitting, setReviewSubmitting] = useState(false)
+  const [reviewDone,       setReviewDone]       = useState(false)
+
   useEffect(() => {
     dispatch(fetchOrderById(id))
   }, [dispatch, id])
+
+  // Load existing product reviews once order is available
+  useEffect(() => {
+    if (!order || (order.status !== 'delivered' && order.status !== 'returned')) return
+    if (reviewedProducts !== null) return
+    reviewService.getMyProductReviews(order._id)
+      .then(reviews => {
+        const map = {}
+        reviews.forEach(r => { map[r.productId] = { rating: r.rating, comment: r.comment } })
+        setReviewedProducts(map)
+        setProductRatings(map)
+      })
+      .catch(() => setReviewedProducts({}))
+  }, [order?._id, order?.status])
+
+  async function submitProductReviews() {
+    const toSubmit = order.items
+      .filter(item => {
+        const pid = item.productId?.toString?.() || item.productId
+        return productRatings[pid]?.rating && !reviewedProducts?.[pid]
+      })
+      .map(item => {
+        const pid = item.productId?.toString?.() || item.productId
+        return { productId: pid, rating: productRatings[pid].rating, comment: productRatings[pid].comment || '' }
+      })
+    if (toSubmit.length === 0) return
+    setReviewSubmitting(true)
+    try {
+      await reviewService.submitProductReviews(order._id, toSubmit)
+      setReviewDone(true)
+      const newMap = { ...reviewedProducts }
+      toSubmit.forEach(r => { newMap[r.productId] = { rating: r.rating, comment: r.comment } })
+      setReviewedProducts(newMap)
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setReviewSubmitting(false)
+    }
+  }
 
   async function submitReturn() {
     if (returnReason.trim().length < 5) {
@@ -260,6 +306,75 @@ export default function OrderDetail() {
               <p className="mt-1 text-xs text-muted-foreground capitalize">
                 Refund status: {order.refundStatus}
               </p>
+            )}
+          </div>
+        )}
+
+        {/* Rate products — shown for delivered / returned orders */}
+        {(order.status === 'delivered' || order.status === 'returned') && reviewedProducts !== null && (
+          <div className="panel p-5">
+            <p className="mb-4 font-semibold text-foreground text-sm">Rate Products</p>
+            <div className="space-y-4">
+              {order.items.map(item => {
+                const pid      = item.productId?.toString?.() || item.productId
+                const existing = reviewedProducts[pid]
+                const current  = productRatings[pid] || {}
+                return (
+                  <div key={pid} className="flex flex-col gap-2">
+                    <p className="text-sm font-medium text-foreground line-clamp-1">{item.productName}</p>
+                    {/* Star selector */}
+                    <div className="flex gap-1">
+                      {[1,2,3,4,5].map(s => (
+                        <button
+                          key={s}
+                          disabled={!!existing}
+                          onClick={() => setProductRatings(prev => ({
+                            ...prev,
+                            [pid]: { ...prev[pid], rating: s }
+                          }))}
+                          className={`text-2xl transition-transform ${
+                            s <= (current.rating || 0) ? 'text-amber-400' : 'text-border'
+                          } ${!existing ? 'hover:scale-110 hover:text-amber-300' : 'cursor-default'}`}
+                        >
+                          ★
+                        </button>
+                      ))}
+                      {existing && (
+                        <span className="ml-2 self-center text-xs text-green-600 font-medium">Reviewed</span>
+                      )}
+                    </div>
+                    {/* Comment input — only if star selected and not yet reviewed */}
+                    {!existing && current.rating > 0 && (
+                      <input
+                        type="text"
+                        placeholder="Add a comment (optional)"
+                        value={current.comment || ''}
+                        onChange={e => setProductRatings(prev => ({
+                          ...prev,
+                          [pid]: { ...prev[pid], comment: e.target.value }
+                        }))}
+                        className="rounded-lg border border-border bg-secondary px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                      />
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+            {/* Submit button — only if something new to submit */}
+            {!reviewDone && order.items.some(item => {
+              const pid = item.productId?.toString?.() || item.productId
+              return productRatings[pid]?.rating && !reviewedProducts[pid]
+            }) && (
+              <button
+                onClick={submitProductReviews}
+                disabled={reviewSubmitting}
+                className="mt-4 w-full rounded-xl bg-primary py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+              >
+                {reviewSubmitting ? 'Submitting…' : 'Submit Reviews'}
+              </button>
+            )}
+            {reviewDone && (
+              <p className="mt-3 text-center text-xs text-green-600 font-medium">Reviews submitted!</p>
             )}
           </div>
         )}

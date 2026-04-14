@@ -115,8 +115,12 @@ const productSchema = new mongoose.Schema(
     pesticideDetails:  { type: mongoose.Schema.Types.Mixed, default: null },
 
     // Analytics — updated async, never blocking
-    totalSold:  { type: Number, default: 0 },
-    viewCount:  { type: Number, default: 0 },
+    totalSold:    { type: Number, default: 0 },
+    viewCount:    { type: Number, default: 0 },
+
+    // Denormalized from ProductReview — updated after each review
+    rating:       { type: Number, default: 0, min: 0, max: 5 },
+    totalReviews: { type: Number, default: 0 },
 
     isDeleted:  { type: Boolean, default: false },
     deletedAt:  { type: Date,    default: null  },

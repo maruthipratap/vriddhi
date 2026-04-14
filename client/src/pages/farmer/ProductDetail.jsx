@@ -24,9 +24,12 @@ export default function ProductDetail() {
   const product = useSelector((s) => s.products.current)
   const [qty,     setQty]     = useState(1)
   const [added,   setAdded]   = useState(false)
-  const [reviews, setReviews] = useState([])
-  const [revPage, setRevPage] = useState(1)
-  const [revMeta, setRevMeta] = useState(null)
+  const [reviews,        setReviews]       = useState([])
+  const [revPage,        setRevPage]       = useState(1)
+  const [revMeta,        setRevMeta]       = useState(null)
+  const [productReviews, setProductReviews] = useState([])
+  const [prodRevPage,    setProdRevPage]   = useState(1)
+  const [prodRevMeta,    setProdRevMeta]   = useState(null)
 
   useEffect(() => {
     dispatch(fetchProduct(id))
@@ -42,6 +45,17 @@ export default function ProductDetail() {
       })
       .catch(() => {})
   }, [product?.shopId, revPage])
+
+  // Load product reviews
+  useEffect(() => {
+    if (!id) return
+    reviewService.getProductReviews(id, prodRevPage)
+      .then(data => {
+        setProductReviews(prev => prodRevPage === 1 ? data.reviews : [...prev, ...data.reviews])
+        setProdRevMeta(data)
+      })
+      .catch(() => {})
+  }, [id, prodRevPage])
 
   if (!product) {
     return (
@@ -168,6 +182,56 @@ export default function ProductDetail() {
             )}
           </div>
         )}
+
+        {/* ── Product Reviews ───────────────────────────────── */}
+        <div className="panel p-5">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-sm font-semibold text-foreground">
+              Product Reviews
+              {prodRevMeta && (
+                <span className="ml-2 text-xs font-normal text-muted-foreground">
+                  ({prodRevMeta.total})
+                </span>
+              )}
+            </p>
+            {product.totalReviews > 0 && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-amber-400 text-sm">★</span>
+                <span className="text-sm font-bold text-foreground">{product.rating?.toFixed(1)}</span>
+              </div>
+            )}
+          </div>
+
+          {productReviews.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No product reviews yet. Be the first to review after purchase!</p>
+          ) : (
+            <div className="space-y-3">
+              {productReviews.map((r) => (
+                <div key={r._id} className="border-b border-border pb-3 last:border-0 last:pb-0">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-foreground">{r.farmerId?.name || 'Farmer'}</p>
+                    <StarDisplay rating={r.rating} />
+                  </div>
+                  {r.comment && (
+                    <p className="mt-1 text-sm text-muted-foreground">{r.comment}</p>
+                  )}
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {new Date(r.createdAt).toLocaleDateString('en-IN')}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {prodRevMeta && prodRevPage < prodRevMeta.totalPages && (
+            <button
+              onClick={() => setProdRevPage(p => p + 1)}
+              className="mt-3 w-full rounded-xl border border-border py-2 text-sm text-muted-foreground hover:border-primary hover:text-primary"
+            >
+              Load more
+            </button>
+          )}
+        </div>
 
         {/* ── Shop Reviews ─────────────────────────────────── */}
         <div className="panel p-5">

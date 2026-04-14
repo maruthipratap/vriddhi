@@ -4,17 +4,21 @@ import {
   createReview,
   getShopReviews,
   getMyReview,
+  createProductReviews,
+  getMyProductReviews,
+  getProductReviews,
 } from '../controllers/review.controller.js'
 
 const router = Router()
 
-// Farmer submits a review for their delivered order
-router.post  ('/orders/:orderId/reviews',     protect, role('farmer'), createReview)
+// ── Shop reviews ──────────────────────────────────────────────
+router.post  ('/orders/:orderId/reviews',            protect, role('farmer'), createReview)
+router.get   ('/orders/:orderId/reviews/me',         protect, role('farmer'), getMyReview)
+router.get   ('/shops/:shopId/reviews',              getShopReviews)
 
-// Farmer checks if they already reviewed an order
-router.get   ('/orders/:orderId/reviews/me',  protect, role('farmer'), getMyReview)
-
-// Anyone can view a shop's reviews (public)
-router.get   ('/shops/:shopId/reviews',       getShopReviews)
+// ── Product reviews ───────────────────────────────────────────
+router.post  ('/orders/:orderId/product-reviews',    protect, role('farmer'), createProductReviews)
+router.get   ('/orders/:orderId/product-reviews/me', protect, role('farmer'), getMyProductReviews)
+router.get   ('/products/:productId/reviews',        getProductReviews)
 
 export default router
