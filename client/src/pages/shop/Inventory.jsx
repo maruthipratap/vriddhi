@@ -1,64 +1,80 @@
-import { useEffect, useState } from 'react'
-import { useSelector } from 'react-redux'
+import { useEffect, useRef, useState } from 'react'
 import InventoryTable from '../../components/shop/InventoryTable.jsx'
 import Modal from '../../components/common/Modal.jsx'
 import IconGlyph from '../../components/common/IconGlyph.jsx'
 import api from '../../services/api.js'
 
-export default function Inventory() {
-  const accessToken = useSelector((s) => s.auth.accessToken)
-  const [products, setProducts] = useState([])
-  const [isLoading, setLoading] = useState(true)
-  const [showAdd, setShowAdd] = useState(false)
-  const [form, setForm] = useState({
-    name: '',
-    category: 'seeds',
-    basePrice: '',
-    unit: 'packet',
-    stockQuantity: '',
-    description: '',
-    brand: '',
-  })
+const EMPTY_FORM = {
+  name: '',
+  category: 'seeds',
+  basePrice: '',
+  unit: 'packet',
+  stockQuantity: '',
+  description: '',
+  brand: '',
+}
 
-  const headers = { Authorization: `Bearer ${accessToken}` }
+export default function Inventory() {
+  const [products, setProducts]   = useState([])
+  const [isLoading, setLoading]   = useState(true)
+  const [showAdd, setShowAdd]     = useState(false)
+  const [form, setForm]           = useState(EMPTY_FORM)
+  const [imageFile, setImageFile] = useState(null)
+  const [imagePreview, setPreview] = useState(null)
+  const [submitting, setSubmit]   = useState(false)
+  const fileRef = useRef()
 
   const loadProducts = () => {
-    api.get('/products/my/products', { headers })
+    api.get('/products/my/products')
       .then((res) => setProducts(res.data.data.products))
       .catch(console.error)
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => {
-    loadProducts()
-  }, [])
+  useEffect(() => { loadProducts() }, [])
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setImageFile(file)
+    setPreview(URL.createObjectURL(file))
+  }
 
   const handleAdd = async () => {
+    if (!form.name || !form.basePrice || !form.stockQuantity) {
+      alert('Name, price and stock are required')
+      return
+    }
+    setSubmit(true)
     try {
-      await api.post('/products', {
-        ...form,
-        basePrice: parseInt(form.basePrice) * 100,
-        stockQuantity: parseInt(form.stockQuantity),
-      }, { headers })
-      setShowAdd(false)
-      setForm({
-        name: '',
-        category: 'seeds',
-        basePrice: '',
-        unit: 'packet',
-        stockQuantity: '',
-        description: '',
-        brand: '',
+      const body = new FormData()
+      body.append('name',          form.name)
+      body.append('category',      form.category)
+      body.append('basePrice',     parseInt(form.basePrice) * 100)
+      body.append('unit',          form.unit)
+      body.append('stockQuantity', parseInt(form.stockQuantity))
+      body.append('description',   form.description)
+      body.append('brand',         form.brand)
+      if (imageFile) body.append('image', imageFile)
+
+      await api.post('/products', body, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       })
+      setShowAdd(false)
+      setForm(EMPTY_FORM)
+      setImageFile(null)
+      setPreview(null)
       loadProducts()
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to add product')
+    } finally {
+      setSubmit(false)
     }
   }
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this product?')) return
-    await api.delete(`/products/${id}`, { headers })
+    await api.delete(`/products/${id}`)
     loadProducts()
   }
 
@@ -99,8 +115,30 @@ export default function Inventory() {
         )}
       </div>
 
-      <Modal isOpen={showAdd} onClose={() => setShowAdd(false)} title="Add New Product">
+      <Modal isOpen={showAdd} onClose={() => { setShowAdd(false); setPreview(null); setImageFile(null) }} title="Add New Product">
         <div className="space-y-3">
+          {/* Image upload */}
+          <div
+            className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-secondary/40 p-4 cursor-pointer transition hover:border-primary"
+            onClick={() => fileRef.current?.click()}
+          >
+            {imagePreview ? (
+              <img src={imagePreview} alt="preview" className="h-24 w-24 rounded-lg object-cover" />
+            ) : (
+              <>
+                <IconGlyph name="image" size={28} className="text-muted-foreground" />
+                <p className="mt-1 text-xs text-muted-foreground">Tap to add product photo</p>
+              </>
+            )}
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleImageChange}
+            />
+          </div>
+
           <input
             className="input"
             placeholder="Product name *"
@@ -113,8 +151,8 @@ export default function Inventory() {
             value={form.category}
             onChange={(e) => setForm({ ...form, category: e.target.value })}
           >
-            {['seeds', 'fertilizers', 'pesticides', 'irrigation', 'tools', 'soil_health', 'organic'].map((category) => (
-              <option key={category} value={category} className="capitalize">{category}</option>
+            {['seeds', 'fertilizers', 'pesticides', 'irrigation', 'tools', 'soil_health', 'organic'].map((c) => (
+              <option key={c} value={c} className="capitalize">{c}</option>
             ))}
           </select>
 
@@ -131,8 +169,8 @@ export default function Inventory() {
               value={form.unit}
               onChange={(e) => setForm({ ...form, unit: e.target.value })}
             >
-              {['kg', 'g', 'litre', 'ml', 'bag', 'piece', 'packet'].map((unit) => (
-                <option key={unit} value={unit}>{unit}</option>
+              {['kg', 'g', 'litre', 'ml', 'bag', 'piece', 'packet'].map((u) => (
+                <option key={u} value={u}>{u}</option>
               ))}
             </select>
           </div>
@@ -159,8 +197,8 @@ export default function Inventory() {
             onChange={(e) => setForm({ ...form, description: e.target.value })}
           />
 
-          <button onClick={handleAdd} className="btn-primary w-full">
-            Add Product
+          <button onClick={handleAdd} disabled={submitting} className="btn-primary w-full">
+            {submitting ? 'Adding...' : 'Add Product'}
           </button>
         </div>
       </Modal>

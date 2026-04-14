@@ -8,8 +8,10 @@ import shopRepository    from '../repositories/shop.repository.js'
 import {
   sendNewOrderEmail,
   sendOrderStatusEmail,
+  sendLowStockAlert,
 } from './notification.service.js'
 import { sendPushToUser } from './push.service.js'
+import { getIO }          from '../config/socket.js'
 
 const razorpay = new Razorpay({
   key_id:     config.razorpay.keyId,
@@ -169,7 +171,10 @@ const orderService = {
     // 9. Update shop order count async
     shopRepository.incrementOrderCount(shopId).catch(console.error)
 
-    // 10. Fire-and-forget email notifications (never delay the response)
+    // 10. Check low stock and alert shop owner (fire-and-forget)
+    checkLowStock(orderItems, shop).catch(() => {})
+
+    // 11. Fire-and-forget email notifications (never delay the response)
     notifyOrderPlaced({ farmerId, shop, order, paymentMethod }).catch(() => {})
 
     return {
@@ -387,6 +392,16 @@ async function notifyOrderPlaced({ farmerId, shop, order, paymentMethod }) {
 }
 
 async function notifyFarmerStatus(farmerId, order) {
+  // Real-time socket push to farmer's personal room
+  const io = getIO()
+  if (io) {
+    io.to(`user_${farmerId}`).emit('order_status_update', {
+      orderId:     order._id,
+      orderNumber: order.orderNumber,
+      status:      order.status,
+    })
+  }
+
   const farmer = await getUserEmail(farmerId)
   if (farmer) {
     await sendOrderStatusEmail(
@@ -396,8 +411,35 @@ async function notifyFarmerStatus(farmerId, order) {
     sendPushToUser(farmerId, {
       title: `Order ${order.status.charAt(0).toUpperCase() + order.status.slice(1)}`,
       body:  `Your order ${order.orderNumber} is now ${order.status}.`,
-      url:   '/farmer/orders',
+      url:   '/orders',
     }).catch(() => {})
+  }
+}
+
+// ── Low stock check ───────────────────────────────────────────
+const LOW_STOCK_THRESHOLD = 10
+
+async function checkLowStock(orderItems, shop) {
+  const shopOwner = await getUserEmail(shop.userId)
+  if (!shopOwner) return
+
+  for (const item of orderItems) {
+    const product = await productRepository.findById(item.productId)
+    if (!product) continue
+    if (product.stockQuantity <= LOW_STOCK_THRESHOLD) {
+      // Push to shop owner
+      sendPushToUser(shop.userId, {
+        title: 'Low Stock Alert',
+        body:  `${product.name} has only ${product.stockQuantity} units left.`,
+        url:   '/shop/inventory',
+      }).catch(() => {})
+
+      // Email to shop owner
+      sendLowStockAlert(shopOwner, {
+        productName:   product.name,
+        stockQuantity: product.stockQuantity,
+      }).catch(() => {})
+    }
   }
 }
 

@@ -271,6 +271,8 @@ export async function getShopDashboard(req, res, next) {
           district: shop.address?.district || '',
           state: shop.address?.state || '',
           verificationStatus: shop.verificationStatus,
+          verificationNote:   shop.verificationNote || '',
+          verifiedAt:         shop.verifiedAt || null,
           totalOrders: shop.totalOrders || orders.length,
           rating: shop.rating || 0,
         },

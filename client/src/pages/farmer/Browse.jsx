@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Link, useSearchParams } from 'react-router-dom'
 import { fetchNearbyProducts } from '../../store/slices/productSlice.js'
-import { useLocation as useGeoLocation } from '../../hooks/useLocation.js'
+import { useLocation as useGeoLocation, CITY_PRESETS } from '../../hooks/useLocation.js'
 import IconGlyph from '../../components/common/IconGlyph.jsx'
 import { CATEGORY_ICON_NAMES } from '../../utils/iconMaps.js'
 
@@ -17,17 +17,68 @@ const categories = [
   { value: 'soil_health', label: 'Soil', icon: 'testTube' },
 ]
 
+// ── Location picker shown when GPS is denied ──────────────────
+function LocationBanner({ location, denied, onSetManual }) {
+  const [showPicker, setShowPicker] = useState(false)
+
+  if (!denied && !showPicker) return null
+
+  return (
+    <div className="mx-4 mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-start gap-2">
+          <IconGlyph name="mapPin" size={16} className="mt-0.5 shrink-0 text-amber-600" />
+          <div>
+            <p className="text-xs font-semibold text-amber-800">
+              {location?.label
+                ? `Showing results near ${location.label}`
+                : 'Location access denied'}
+            </p>
+            <p className="text-[11px] text-amber-700 mt-0.5">
+              {denied ? 'Enable GPS or choose your city for better results.' : ''}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={() => setShowPicker(p => !p)}
+          className="shrink-0 rounded-lg bg-amber-100 px-2 py-1 text-[11px] font-semibold text-amber-800 hover:bg-amber-200"
+        >
+          {showPicker ? 'Close' : 'Change'}
+        </button>
+      </div>
+
+      {showPicker && (
+        <div className="mt-3 grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+          {CITY_PRESETS.map(city => (
+            <button
+              key={city.label}
+              onClick={() => { onSetManual(city); setShowPicker(false) }}
+              className={`rounded-lg border px-2 py-1.5 text-xs font-medium transition-all ${
+                location?.label === city.label
+                  ? 'border-primary bg-primary text-white'
+                  : 'border-border bg-white text-foreground hover:border-primary/50'
+              }`}
+            >
+              {city.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Browse() {
   const dispatch = useDispatch()
   const [params] = useSearchParams()
-  const { location } = useGeoLocation()
-  const products = useSelector((s) => s.products.nearby)
+  const { location, denied, setManual } = useGeoLocation()
+  const products  = useSelector((s) => s.products.nearby)
   const isLoading = useSelector((s) => s.products.isLoading)
 
-  const [search, setSearch] = useState('')
+  const [search,   setSearch]   = useState('')
   const [category, setCategory] = useState(params.get('category') || '')
 
-  const handleSearchChange = useCallback((e) => setSearch(e.target.value), [])
+  const handleSearchChange   = useCallback((e) => setSearch(e.target.value), [])
   const handleCategoryChange = useCallback((value) => setCategory(value), [])
 
   useEffect(() => {
@@ -49,6 +100,9 @@ export default function Browse() {
           onChange={handleSearchChange}
         />
       </div>
+
+      {/* Location banner — only visible when GPS denied */}
+      <LocationBanner location={location} denied={denied} onSetManual={setManual} />
 
       <div className="sticky top-14 z-40 border-b border-border bg-white">
         <div className="section-container">
@@ -99,11 +153,19 @@ export default function Browse() {
                   className="card group transition-all hover:border-primary/40 hover:shadow-md"
                 >
                   <div className="mb-3 flex h-28 w-full items-center justify-center rounded-xl bg-secondary text-4xl transition-colors group-hover:bg-primary/10">
-                    <IconGlyph
-                      name={CATEGORY_ICON_NAMES[product.category] || 'box'}
-                      size={34}
-                      className="text-primary"
-                    />
+                    {product.images?.[0] ? (
+                      <img
+                        src={product.images[0]}
+                        alt={product.name}
+                        className="h-full w-full rounded-xl object-cover"
+                      />
+                    ) : (
+                      <IconGlyph
+                        name={CATEGORY_ICON_NAMES[product.category] || 'box'}
+                        size={34}
+                        className="text-primary"
+                      />
+                    )}
                   </div>
                   <p className="line-clamp-2 text-xs font-semibold text-foreground">{product.name}</p>
                   {product.brand && (

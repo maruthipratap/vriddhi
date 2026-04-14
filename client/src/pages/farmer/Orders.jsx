@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useDispatch, useSelector }          from 'react-redux'
+import { useNavigate }                       from 'react-router-dom'
 import { fetchMyOrders }                     from '../../store/slices/orderSlice.js'
 import reviewService                         from '../../services/review.service.js'
 import IconGlyph                             from '../../components/common/IconGlyph.jsx'
@@ -186,6 +187,7 @@ function ReviewModal({ order, onClose, onSubmitted }) {
 // ── Main Page ─────────────────────────────────────────────────
 export default function Orders() {
   const dispatch     = useDispatch()
+  const navigate     = useNavigate()
   const orders       = useSelector((s) => s.orders.list)
   const totalPages   = useSelector((s) => s.orders.totalPages)
   const isLoading    = useSelector((s) => s.orders.isLoading)
@@ -234,7 +236,12 @@ export default function Orders() {
 
               <div key={order._id} className="panel p-5">
                 <div className="mb-3 flex items-center justify-between">
-                  <p className="text-sm font-bold text-foreground">{order.orderNumber}</p>
+                  <button
+                    onClick={() => navigate(`/orders/${order._id}`)}
+                    className="text-sm font-bold text-foreground hover:text-primary hover:underline text-left"
+                  >
+                    {order.orderNumber}
+                  </button>
                   <span className={STATUS_COLORS[order.status] || 'badge-gold'}>
                     {order.status.replace('_', ' ')}
                   </span>

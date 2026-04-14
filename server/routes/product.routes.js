@@ -9,6 +9,7 @@ import {
   getMyProducts,
 } from '../controllers/product.controller.js'
 import { protect, role } from '../middleware/auth.middleware.js'
+import { upload } from '../middleware/upload.middleware.js'
 
 const router = Router()
 
@@ -20,8 +21,8 @@ router.get('/:id',             getProduct)
 // Shop owner only
 router.use(protect)
 router.get   ('/my/products',  role('shop_owner'), getMyProducts)
-router.post  ('/',             role('shop_owner'), createProduct)
-router.patch ('/:id',          role('shop_owner'), updateProduct)
+router.post  ('/',             role('shop_owner'), upload.single('image'), createProduct)
+router.patch ('/:id',          role('shop_owner'), upload.single('image'), updateProduct)
 router.delete('/:id',          role('shop_owner'), deleteProduct)
 
 export default router

@@ -112,6 +112,55 @@ function TopProductsChart({ data }) {
   )
 }
 
+// ── Verification status banner ────────────────────────────────
+function VerificationBanner({ status, note }) {
+  if (status === 'verified') return null
+
+  const config = {
+    pending: {
+      bg:    'bg-amber-50 border-amber-200',
+      title: 'Verification Pending',
+      body:  'Your shop is under review. You can browse the dashboard but customers won\'t see your listings until verified.',
+      icon:  '⏳',
+    },
+    rejected: {
+      bg:    'bg-red-50 border-red-200',
+      title: 'Verification Rejected',
+      body:  note || 'Your shop application was not approved. Please update your details and contact support.',
+      icon:  '✗',
+    },
+    suspended: {
+      bg:    'bg-gray-100 border-gray-300',
+      title: 'Shop Suspended',
+      body:  note || 'Your shop has been suspended. Please contact support for details.',
+      icon:  '⚠',
+    },
+  }
+
+  const cfg = config[status]
+  if (!cfg) return null
+
+  return (
+    <div className={`mx-4 mt-4 rounded-xl border p-4 ${cfg.bg}`}>
+      <div className="flex items-start gap-3">
+        <span className="text-2xl">{cfg.icon}</span>
+        <div>
+          <p className="font-semibold text-foreground">{cfg.title}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{cfg.body}</p>
+          {status === 'rejected' && (
+            <a
+              href="mailto:support@vriddhi.in"
+              className="mt-2 inline-block text-xs font-medium text-primary underline"
+            >
+              Contact support →
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function ShopDashboard() {
   const [dashboard, setDashboard]     = useState(null)
   const [analytics, setAnalytics]     = useState(null)
@@ -175,6 +224,11 @@ export default function ShopDashboard() {
           Track inventory health, recent orders, and local mandi movement from one place.
         </p>
       </div>
+
+      <VerificationBanner
+        status={shop.verificationStatus}
+        note={shop.verificationNote}
+      />
 
       <div className="section-container mt-6 space-y-6">
         {error && (

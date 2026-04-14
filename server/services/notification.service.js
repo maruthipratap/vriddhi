@@ -129,6 +129,22 @@ export async function sendNewOrderEmail(shopOwner, order) {
 }
 
 /**
+ * Alert a shop owner that a product is running low on stock.
+ * @param {{ name: string, email: string }} shopOwner
+ * @param {{ productName: string, stockQuantity: number }} product
+ */
+export async function sendLowStockAlert(shopOwner, product) {
+  await send({
+    to:      shopOwner.email,
+    subject: `Low Stock Alert — ${product.productName}`,
+    html:    `<p>Hi ${shopOwner.name},</p>
+              <p>Your product <strong>${product.productName}</strong> is running low on stock.</p>
+              <p>Current stock: <strong>${product.stockQuantity}</strong> units remaining.</p>
+              <p>Please restock soon to avoid losing sales.</p>`,
+  })
+}
+
+/**
  * Notify an admin that a new shop needs verification.
  * @param {{ shopName: string, ownerName: string }} shop
  */

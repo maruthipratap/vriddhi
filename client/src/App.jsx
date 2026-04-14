@@ -28,7 +28,9 @@ const Home = lazy(() => import('./pages/farmer/Home.jsx'))
 const Browse = lazy(() => import('./pages/farmer/Browse.jsx'))
 const ProductDetail = lazy(() => import('./pages/farmer/ProductDetail.jsx'))
 const Cart = lazy(() => import('./pages/farmer/Cart.jsx'))
-const Orders = lazy(() => import('./pages/farmer/Orders.jsx'))
+const Orders       = lazy(() => import('./pages/farmer/Orders.jsx'))
+const OrderDetail  = lazy(() => import('./pages/farmer/OrderDetail.jsx'))
+const Notifications = lazy(() => import('./pages/farmer/Notifications.jsx'))
 const CropCalendar = lazy(() => import('./pages/farmer/CropCalendar.jsx'))
 const Forum = lazy(() => import('./pages/farmer/Forum.jsx'))
 const MandiPrices = lazy(() => import('./pages/farmer/MandiPrices.jsx'))
@@ -179,6 +181,8 @@ export default function App() {
           <Route path="/products/:id" element={<D><ProductDetail /></D>} />
           <Route path="/cart" element={<D><Cart /></D>} />
           <Route path="/orders" element={<D><Orders /></D>} />
+          <Route path="/orders/:id" element={<D><OrderDetail /></D>} />
+          <Route path="/notifications" element={<D><Notifications /></D>} />
 
           {/* ── PRIVATE: Chat ── */}
           <Route path="/chats" element={<D fallback={<ChatLoader />}><ChatList /></D>} />

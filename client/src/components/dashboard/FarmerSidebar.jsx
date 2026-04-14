@@ -6,16 +6,17 @@ import IconGlyph from '../common/IconGlyph.jsx'
 import { useDarkMode } from '../../hooks/useDarkMode.js'
 
 const farmerItems = [
-  { title: 'Dashboard',    url: '/home',        icon: 'home'        },
-  { title: 'Find Shops',   url: '/browse',      icon: 'search'      },
-  { title: 'AI Advisor',   url: '/ai/seeds',    icon: 'bot'         },
-  { title: 'Cart',         url: '/cart',        icon: 'cart'        },
-  { title: 'Orders',       url: '/orders',      icon: 'box'         },
-  { title: 'Mandi Prices', url: '/mandi',       icon: 'trendingUp'  },
-  { title: 'Crop Calendar',url: '/calendar',    icon: 'calendar'    },
-  { title: 'Community',    url: '/forum',       icon: 'community'   },
-  { title: 'My Farm',      url: '/onboarding',  icon: 'sprout'      },
-  { title: 'Settings',     url: '/settings',    icon: 'settings'    },
+  { title: 'Dashboard',     url: '/home',           icon: 'home'        },
+  { title: 'Find Shops',    url: '/browse',         icon: 'search'      },
+  { title: 'AI Advisor',    url: '/ai/seeds',       icon: 'bot'         },
+  { title: 'Cart',          url: '/cart',           icon: 'cart'        },
+  { title: 'Orders',        url: '/orders',         icon: 'box'         },
+  { title: 'Notifications', url: '/notifications',  icon: 'bell'        },
+  { title: 'Mandi Prices',  url: '/mandi',          icon: 'trendingUp'  },
+  { title: 'Crop Calendar', url: '/calendar',       icon: 'calendar'    },
+  { title: 'Community',     url: '/forum',          icon: 'community'   },
+  { title: 'My Farm',       url: '/onboarding',     icon: 'sprout'      },
+  { title: 'Settings',      url: '/settings',       icon: 'settings'    },
 ]
 
 export default function FarmerSidebar() {

@@ -1,20 +1,16 @@
 import { useEffect, useState } from 'react'
-import { useSelector } from 'react-redux'
 import OrderList from '../../components/shop/OrderList.jsx'
 import IconGlyph from '../../components/common/IconGlyph.jsx'
 import api from '../../services/api.js'
 
 export default function ShopOrders() {
-  const accessToken = useSelector((s) => s.auth.accessToken)
   const [orders, setOrders] = useState([])
   const [isLoading, setLoading] = useState(true)
   const [filter, setFilter] = useState('')
 
-  const headers = { Authorization: `Bearer ${accessToken}` }
-
   const loadOrders = () => {
     const url = filter ? `/orders/shop/all?status=${filter}` : '/orders/shop/all'
-    api.get(url, { headers })
+    api.get(url)
       .then((res) => setOrders(res.data.data.orders || []))
       .catch(console.error)
       .finally(() => setLoading(false))
@@ -28,8 +24,7 @@ export default function ShopOrders() {
     try {
       await api.patch(
         `/orders/${orderId}/status`,
-        { status: newStatus, note: `Status updated to ${newStatus}` },
-        { headers }
+        { status: newStatus, note: `Status updated to ${newStatus}` }
       )
       loadOrders()
     } catch (err) {

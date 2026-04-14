@@ -1,0 +1,107 @@
+{
+  "app": {
+    "name": "ವೃದ್ಧಿ",
+    "tagline": "ಹೆಚ್ಚು ಬೆಳೆಯಿರಿ. ಹೆಚ್ಚು ಗಳಿಸಿರಿ. ಉತ್ತಮ ಜೀವನ."
+  },
+  "nav": {
+    "home": "ಮನೆ",
+    "browse": "ಹುಡುಕಿ",
+    "orders": "ಆದೇಶಗಳು",
+    "chat": "ಚಾಟ್",
+    "ai": "ಎಐ",
+    "notifications": "ಅಧಿಸೂಚನೆಗಳು",
+    "cart": "ಬಂಡಿ"
+  },
+  "auth": {
+    "login": "ಲಾಗಿನ್",
+    "register": "ನೋಂದಣಿ",
+    "logout": "ಲಾಗ್‌ಔಟ್",
+    "email_phone": "ಇಮೇಲ್ ಅಥವಾ ಫೋನ್",
+    "password": "ಪಾಸ್‌ವರ್ಡ್",
+    "full_name": "ಪೂರ್ಣ ಹೆಸರು",
+    "welcome_back": "ಮರಳಿ ಸ್ವಾಗತ 👋",
+    "create_account": "ಖಾತೆ ರಚಿಸಿ 🚀",
+    "no_account": "ಖಾತೆ ಇಲ್ಲವೇ?",
+    "have_account": "ಈಗಾಗಲೇ ಖಾತೆ ಇದೆಯೇ?",
+    "forgot_password": "ಪಾಸ್‌ವರ್ಡ್ ಮರೆತಿದ್ದೀರಾ?",
+    "send_reset_link": "ರಿಸೆಟ್ ಲಿಂಕ್ ಕಳಿಸಿ"
+  },
+  "home": {
+    "good_morning": "ಶುಭ ಬೆಳಿಗ್ಗೆ 🌅",
+    "good_afternoon": "ಶುಭ ಮಧ್ಯಾಹ್ನ ☀️",
+    "good_evening": "ಶುಭ ಸಂಜೆ 🌙",
+    "hello": "ನಮಸ್ಕಾರ",
+    "shops_nearby": "ಹತ್ತಿರದ ಅಂಗಡಿಗಳು",
+    "products_available": "ಉತ್ಪನ್ನಗಳು ಲಭ್ಯ",
+    "search_placeholder": "ಬೀಜ, ರಸಗೊಬ್ಬರ ಹುಡುಕಿ...",
+    "ai_advisor": "ಎಐ ಸಲಹೆಗಾರ",
+    "seed_advice": "ಬೀಜ ಸಲಹೆ",
+    "cost_calculator": "ವೆಚ್ಚ ಲೆಕ್ಕಾಚಾರ",
+    "shop_by_category": "ವರ್ಗದ ಮೂಲಕ ಶಾಪಿಂಗ್",
+    "nearby_shops": "ಹತ್ತಿರದ ಅಂಗಡಿಗಳು",
+    "products_near_you": "ನಿಮ್ಮ ಬಳಿಯ ಉತ್ಪನ್ನಗಳು",
+    "see_all": "ಎಲ್ಲಾ ನೋಡಿ"
+  },
+  "categories": {
+    "seeds": "ಬೀಜಗಳು",
+    "fertilizers": "ರಸಗೊಬ್ಬರ",
+    "pesticides": "ಕೀಟನಾಶಕ",
+    "tools": "ಉಪಕರಣಗಳು",
+    "irrigation": "ನೀರಾವರಿ",
+    "organic": "ಸಾವಯವ",
+    "soil_health": "ಮಣ್ಣಿನ ಆರೋಗ್ಯ",
+    "animal_livestock": "ಪಶು & ಜಾನುವಾರು"
+  },
+  "product": {
+    "add_to_cart": "ಬಂಡಿಗೆ ಸೇರಿಸಿ",
+    "added": "ಸೇರಿಸಲಾಗಿದೆ!",
+    "out_of_stock": "ಸ್ಟಾಕ್ ಖಾಲಿ",
+    "organic": "ಸಾವಯವ",
+    "in_stock": "ಸ್ಟಾಕ್ ಇದೆ",
+    "quantity": "ಪ್ರಮಾಣ",
+    "total": "ಒಟ್ಟು",
+    "description": "ವಿವರಣೆ"
+  },
+  "cart": {
+    "title": "ನಿಮ್ಮ ಬಂಡಿ 🛒",
+    "empty": "ಬಂಡಿ ಖಾಲಿ",
+    "browse_products": "ಉತ್ಪನ್ನಗಳು ನೋಡಿ",
+    "order_summary": "ಆದೇಶ ಸಾರಾಂಶ",
+    "subtotal": "ಒಟ್ಟು ಮೊತ್ತ",
+    "delivery": "ವಿತರಣೆ",
+    "free": "ಉಚಿತ",
+    "pickup": "ತೆಗೆದುಕೊಳ್ಳಿ",
+    "place_order": "ಆದೇಶ ನೀಡಿ",
+    "placing_order": "ಆದೇಶ ನೀಡಲಾಗುತ್ತಿದೆ..."
+  },
+  "orders": {
+    "title": "ನನ್ನ ಆದೇಶಗಳು 📦",
+    "no_orders": "ಇನ್ನೂ ಆದೇಶಗಳಿಲ್ಲ",
+    "status": {
+      "pending": "ಬಾಕಿ",
+      "confirmed": "ದೃಢೀಕರಿಸಲಾಗಿದೆ",
+      "processing": "ಪ್ರಕ್ರಿಯೆಯಲ್ಲಿದೆ",
+      "ready": "ತಯಾರು",
+      "out_for_delivery": "ವಿತರಣೆಯಲ್ಲಿ",
+      "delivered": "ತಲುಪಿಸಲಾಗಿದೆ",
+      "cancelled": "ರದ್ದುಮಾಡಲಾಗಿದೆ"
+    }
+  },
+  "chat": {
+    "title": "ಸಂದೇಶಗಳು 💬",
+    "no_chats": "ಇನ್ನೂ ಸಂಭಾಷಣೆಗಳಿಲ್ಲ",
+    "type_message": "ಸಂದೇಶ ಟೈಪ್ ಮಾಡಿ...",
+    "online": "ಆನ್‌ಲೈನ್"
+  },
+  "common": {
+    "loading": "ಲೋಡ್ ಆಗುತ್ತಿದೆ...",
+    "error": "ಏನೋ ತಪ್ಪಾಗಿದೆ",
+    "retry": "ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ",
+    "save": "ಉಳಿಸಿ",
+    "cancel": "ರದ್ದು",
+    "close": "ಮುಚ್ಚಿ",
+    "back": "ಹಿಂದೆ",
+    "search": "ಹುಡುಕಿ",
+    "all": "ಎಲ್ಲಾ"
+  }
+}

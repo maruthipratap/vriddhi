@@ -1,5 +1,4 @@
 import { Router }        from 'express'
-import rateLimit         from 'express-rate-limit'
 import {
   recommendSeeds,
   identifyDisease,
@@ -11,29 +10,23 @@ import {
 } from '../controllers/ai.controller.js'
 import { protect }          from '../middleware/auth.middleware.js'
 import { upload }           from '../middleware/upload.middleware.js'
-
-// AI rate limiter — protect Claude API costs
-const aiLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000,  // 1 hour
-  max:      20,               // 20 AI calls per hour per user
-  keyGenerator: (req) => req.user?.id || req.ip,
-  message: {
-    success: false,
-    message: 'AI usage limit reached. Try again in an hour.',
-    code:    'AI_RATE_LIMIT',
-  },
-})
+import { aiRateLimit, IMAGE_WEIGHT } from '../middleware/aiRateLimit.middleware.js'
 
 const router = Router()
-router.use(protect)     // all AI routes require auth
-router.use(aiLimiter)   // cost protection
+router.use(protect)   // all AI routes require auth
 
-router.post('/recommend-seeds',    recommendSeeds)
-router.post('/identify-disease',   upload.single('image'), identifyDisease)
-router.post('/fertilizer-advice',  adviseFertilizer)
-router.post('/match-schemes',      matchSchemes)
-router.post('/cost-profit',        calculateCostProfit)
-router.post('/weather-advice',     weatherAdvice)
-router.post('/chat',               chat)
+// Standard endpoints — 1 credit each
+const std = aiRateLimit({ weight: 1 })
+
+// Image endpoint — costs IMAGE_WEIGHT credits (vision API is expensive)
+const img = aiRateLimit({ weight: IMAGE_WEIGHT })
+
+router.post('/recommend-seeds',    std, recommendSeeds)
+router.post('/identify-disease',   img, upload.single('image'), identifyDisease)
+router.post('/fertilizer-advice',  std, adviseFertilizer)
+router.post('/match-schemes',      std, matchSchemes)
+router.post('/cost-profit',        std, calculateCostProfit)
+router.post('/weather-advice',     std, weatherAdvice)
+router.post('/chat',               std, chat)
 
 export default router

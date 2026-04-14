@@ -4,6 +4,7 @@ import {
   createProductSchema,
   updateProductSchema,
 } from '../models/Product.js'
+import { uploadToCloudinary } from '../middleware/upload.middleware.js'
 
 // ── Create product ────────────────────────────────────────────
 export async function createProduct(req, res, next) {
@@ -25,10 +26,24 @@ export async function createProduct(req, res, next) {
       })
     }
 
-    const validated = createProductSchema.parse(req.body)
+    // Coerce string numbers from multipart/form-data
+    const body = {
+      ...req.body,
+      basePrice:     Number(req.body.basePrice),
+      stockQuantity: Number(req.body.stockQuantity),
+    }
+    const validated = createProductSchema.parse(body)
+
+    // Upload image if provided
+    let images = []
+    if (req.file) {
+      const { url } = await uploadToCloudinary(req.file.buffer, 'vriddhi/products')
+      images = [url]
+    }
 
     const product = await productRepository.create({
       ...validated,
+      images,
       shopId: shop._id,
       // Denormalize shop location for display (NOT for geo queries)
       shopLocation: shop.location,

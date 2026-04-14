@@ -95,19 +95,27 @@ export default function DashboardNavbar() {
           {/* Right side */}
           <div className="flex items-center gap-2">
 
-            {/* Cart (farmers only) */}
+            {/* Notifications + Cart (farmers only) */}
             {user?.role === 'farmer' && (
-              <Link to="/cart"
-                className="relative p-2 rounded-xl hover:bg-secondary transition-colors">
-                <IconGlyph name="cart" size={20} className="text-foreground" />
-                {cartCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px]
-                                   px-1 bg-accent text-accent-foreground text-[10px]
-                                   rounded-full flex items-center justify-center font-bold">
-                    {cartCount}
-                  </span>
-                )}
-              </Link>
+              <>
+                <Link to="/notifications"
+                  className="p-2 rounded-xl hover:bg-secondary transition-colors"
+                  title="Notifications"
+                >
+                  <IconGlyph name="bell" size={20} className="text-foreground" />
+                </Link>
+                <Link to="/cart"
+                  className="relative p-2 rounded-xl hover:bg-secondary transition-colors">
+                  <IconGlyph name="cart" size={20} className="text-foreground" />
+                  {cartCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px]
+                                     px-1 bg-accent text-accent-foreground text-[10px]
+                                     rounded-full flex items-center justify-center font-bold">
+                      {cartCount}
+                    </span>
+                  )}
+                </Link>
+              </>
             )}
 
             {/* Dark mode toggle */}
