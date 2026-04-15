@@ -19,9 +19,9 @@ export default function Inventory() {
   const [isLoading, setLoading]   = useState(true)
   const [showAdd, setShowAdd]     = useState(false)
   const [form, setForm]           = useState(EMPTY_FORM)
-  const [imageFile, setImageFile] = useState(null)
-  const [imagePreview, setPreview] = useState(null)
-  const [submitting, setSubmit]   = useState(false)
+  const [imageFiles,   setImageFiles]   = useState([])   // new File objects to upload
+  const [imagePreviews,setImagePreviews] = useState([])   // object URLs for new files
+  const [submitting,   setSubmit]       = useState(false)
   const fileRef = useRef()
 
   const loadProducts = () => {
@@ -33,11 +33,20 @@ export default function Inventory() {
 
   useEffect(() => { loadProducts() }, [])
 
+  const MAX_IMAGES = 5
+
   const handleImageChange = (e) => {
-    const file = e.target.files[0]
-    if (!file) return
-    setImageFile(file)
-    setPreview(URL.createObjectURL(file))
+    const files   = Array.from(e.target.files)
+    const slots   = MAX_IMAGES - imageFiles.length
+    const toAdd   = files.slice(0, slots)
+    setImageFiles(prev  => [...prev,  ...toAdd])
+    setImagePreviews(prev => [...prev, ...toAdd.map(f => URL.createObjectURL(f))])
+    e.target.value = ''  // allow re-selecting same file
+  }
+
+  const removeNewImage = (idx) => {
+    setImageFiles(prev    => prev.filter((_, i) => i !== idx))
+    setImagePreviews(prev => prev.filter((_, i) => i !== idx))
   }
 
   const handleAdd = async () => {
@@ -55,15 +64,13 @@ export default function Inventory() {
       body.append('stockQuantity', parseInt(form.stockQuantity))
       body.append('description',   form.description)
       body.append('brand',         form.brand)
-      if (imageFile) body.append('image', imageFile)
+      imageFiles.forEach(f => body.append('images', f))
 
-      await api.post('/products', body, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
+      await api.post('/products', body, { headers: { 'Content-Type': 'multipart/form-data' } })
       setShowAdd(false)
       setForm(EMPTY_FORM)
-      setImageFile(null)
-      setPreview(null)
+      setImageFiles([])
+      setImagePreviews([])
       loadProducts()
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to add product')
@@ -115,25 +122,39 @@ export default function Inventory() {
         )}
       </div>
 
-      <Modal isOpen={showAdd} onClose={() => { setShowAdd(false); setPreview(null); setImageFile(null) }} title="Add New Product">
+      <Modal isOpen={showAdd} onClose={() => { setShowAdd(false); setImageFiles([]); setImagePreviews([]) }} title="Add New Product">
         <div className="space-y-3">
-          {/* Image upload */}
-          <div
-            className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-secondary/40 p-4 cursor-pointer transition hover:border-primary"
-            onClick={() => fileRef.current?.click()}
-          >
-            {imagePreview ? (
-              <img src={imagePreview} alt="preview" className="h-24 w-24 rounded-lg object-cover" />
-            ) : (
-              <>
-                <IconGlyph name="image" size={28} className="text-muted-foreground" />
-                <p className="mt-1 text-xs text-muted-foreground">Tap to add product photo</p>
-              </>
-            )}
+          {/* Multi-image upload */}
+          <div>
+            <p className="mb-2 text-xs font-medium text-muted-foreground">
+              Photos ({imageFiles.length}/{MAX_IMAGES})
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {imagePreviews.map((src, i) => (
+                <div key={i} className="relative h-20 w-20">
+                  <img src={src} alt="" className="h-full w-full rounded-lg object-cover" />
+                  <button
+                    onClick={() => removeNewImage(i)}
+                    className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-white text-xs font-bold"
+                  >✕</button>
+                </div>
+              ))}
+              {imageFiles.length < MAX_IMAGES && (
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  className="flex h-20 w-20 flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-secondary/40 text-muted-foreground transition hover:border-primary"
+                >
+                  <IconGlyph name="image" size={22} />
+                  <span className="mt-1 text-[10px]">Add</span>
+                </button>
+              )}
+            </div>
             <input
               ref={fileRef}
               type="file"
               accept="image/*"
+              multiple
               className="hidden"
               onChange={handleImageChange}
             />

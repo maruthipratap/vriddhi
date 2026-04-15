@@ -27,13 +27,21 @@ function ProductCard({ product, showAddToCart = true }) {
     <Link to={`/products/${product._id}`} className="card hover:border-forest
                                                       transition-all block">
       {/* Image */}
-      <div className="w-full h-28 bg-green-50 rounded-xl flex items-center
-                      justify-center text-4xl mb-3">
-        <IconGlyph
-          name={CATEGORY_ICON_NAMES[product.category] || 'box'}
-          size={40}
-          className="text-forest"
-        />
+      <div className="w-full h-28 bg-green-50 rounded-xl overflow-hidden flex items-center justify-center mb-3">
+        {product.images?.[0] ? (
+          <img
+            src={product.images[0]}
+            alt={product.name}
+            className="h-full w-full object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <IconGlyph
+            name={CATEGORY_ICON_NAMES[product.category] || 'box'}
+            size={40}
+            className="text-forest"
+          />
+        )}
       </div>
 
       {/* Info */}

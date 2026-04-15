@@ -21,8 +21,8 @@ router.get('/:id',             getProduct)
 // Shop owner only
 router.use(protect)
 router.get   ('/my/products',  role('shop_owner'), getMyProducts)
-router.post  ('/',             role('shop_owner'), upload.single('image'), createProduct)
-router.patch ('/:id',          role('shop_owner'), upload.single('image'), updateProduct)
+router.post  ('/',             role('shop_owner'), upload.array('images', 5), createProduct)
+router.patch ('/:id',          role('shop_owner'), upload.array('images', 5), updateProduct)
 router.delete('/:id',          role('shop_owner'), deleteProduct)
 
 export default router

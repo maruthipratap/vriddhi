@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchProduct } from '../../store/slices/productSlice.js'
@@ -24,12 +24,21 @@ export default function ProductDetail() {
   const product = useSelector((s) => s.products.current)
   const [qty,     setQty]     = useState(1)
   const [added,   setAdded]   = useState(false)
+  const [activeImg,      setActiveImg]     = useState(0)
   const [reviews,        setReviews]       = useState([])
   const [revPage,        setRevPage]       = useState(1)
   const [revMeta,        setRevMeta]       = useState(null)
   const [productReviews, setProductReviews] = useState([])
   const [prodRevPage,    setProdRevPage]   = useState(1)
   const [prodRevMeta,    setProdRevMeta]   = useState(null)
+
+  const prevImg = useCallback(() =>
+    setActiveImg(i => (i - 1 + (product?.images?.length || 1)) % (product?.images?.length || 1)),
+  [product?.images?.length])
+
+  const nextImg = useCallback(() =>
+    setActiveImg(i => (i + 1) % (product?.images?.length || 1)),
+  [product?.images?.length])
 
   useEffect(() => {
     dispatch(fetchProduct(id))
@@ -96,14 +105,67 @@ export default function ProductDetail() {
       </div>
 
       <div className="section-container mt-6 space-y-4">
+        {/* Image gallery */}
         <div className="panel overflow-hidden p-0">
-          <div className="flex h-56 w-full items-center justify-center bg-secondary">
-            <IconGlyph
-              name={CATEGORY_ICON_NAMES[product.category] || 'box'}
-              size={72}
-              className="text-primary"
-            />
+          <div className="relative h-56 w-full bg-secondary">
+            {product.images?.length > 0 ? (
+              <>
+                <img
+                  src={product.images[activeImg]}
+                  alt={product.name}
+                  className="h-full w-full object-cover"
+                />
+                {product.images.length > 1 && (
+                  <>
+                    <button
+                      onClick={prevImg}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white hover:bg-black/60"
+                    >‹</button>
+                    <button
+                      onClick={nextImg}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white hover:bg-black/60"
+                    >›</button>
+                    {/* Dot indicators */}
+                    <div className="absolute bottom-2 left-1/2 flex -translate-x-1/2 gap-1.5">
+                      {product.images.map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setActiveImg(i)}
+                          className={`h-1.5 rounded-full transition-all ${
+                            i === activeImg ? 'w-4 bg-white' : 'w-1.5 bg-white/50'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
+              </>
+            ) : (
+              <div className="flex h-full w-full items-center justify-center">
+                <IconGlyph
+                  name={CATEGORY_ICON_NAMES[product.category] || 'box'}
+                  size={72}
+                  className="text-primary"
+                />
+              </div>
+            )}
           </div>
+          {/* Thumbnail strip */}
+          {product.images?.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto p-3">
+              {product.images.map((img, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActiveImg(i)}
+                  className={`h-14 w-14 shrink-0 overflow-hidden rounded-lg border-2 transition-colors ${
+                    i === activeImg ? 'border-primary' : 'border-transparent'
+                  }`}
+                >
+                  <img src={img} alt="" className="h-full w-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div>

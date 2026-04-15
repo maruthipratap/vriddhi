@@ -4,7 +4,7 @@ import {
   createProductSchema,
   updateProductSchema,
 } from '../models/Product.js'
-import { uploadToCloudinary } from '../middleware/upload.middleware.js'
+import { uploadToCloudinary, deleteFromCloudinary } from '../middleware/upload.middleware.js'
 
 // ── Create product ────────────────────────────────────────────
 export async function createProduct(req, res, next) {
@@ -34,11 +34,12 @@ export async function createProduct(req, res, next) {
     }
     const validated = createProductSchema.parse(body)
 
-    // Upload image if provided
+    // Upload all provided images (up to 5)
     let images = []
-    if (req.file) {
-      const { url } = await uploadToCloudinary(req.file.buffer, 'vriddhi/products')
-      images = [url]
+    if (req.files?.length) {
+      images = await Promise.all(
+        req.files.map(f => uploadToCloudinary(f.buffer, 'vriddhi/products').then(r => r.url))
+      )
     }
 
     const product = await productRepository.create({
@@ -194,9 +195,36 @@ export async function updateProduct(req, res, next) {
     }
 
     const validated = updateProductSchema.parse(req.body)
-    const updated   = await productRepository.updateById(
-      product._id, validated
-    )
+
+    // Image management:
+    // keepImages = JSON array of existing URLs the shop wants to keep
+    // req.files  = new image files to upload
+    let images = product.images || []
+
+    if (req.body.keepImages !== undefined) {
+      try {
+        const keep    = JSON.parse(req.body.keepImages)   // URLs to keep
+        const removed = images.filter(url => !keep.includes(url))
+        // Delete removed images from Cloudinary (fire-and-forget)
+        removed.forEach(url => {
+          const publicId = url.split('/').slice(-2).join('/').replace(/\.[^.]+$/, '')
+          deleteFromCloudinary(publicId).catch(() => {})
+        })
+        images = keep
+      } catch { /* malformed JSON — leave images unchanged */ }
+    }
+
+    if (req.files?.length) {
+      const MAX_IMAGES = 5
+      const slots = MAX_IMAGES - images.length
+      const toUpload = req.files.slice(0, slots)
+      const newUrls  = await Promise.all(
+        toUpload.map(f => uploadToCloudinary(f.buffer, 'vriddhi/products').then(r => r.url))
+      )
+      images = [...images, ...newUrls]
+    }
+
+    const updated = await productRepository.updateById(product._id, { ...validated, images })
 
     res.status(200).json({
       success: true,
