@@ -24,9 +24,13 @@ export default function ShopOrders() {
   const [returnNote,  setReturnNote]  = useState('')
   const [resolving,   setResolving]   = useState(false)
 
-  const handleUpdateStatus = async (orderId, newStatus) => {
+  const handleUpdateStatus = async (orderId, newStatus, estimatedDelivery = null) => {
     try {
-      await api.patch(`/orders/${orderId}/status`, { status: newStatus, note: `Status updated to ${newStatus}` })
+      await api.patch(`/orders/${orderId}/status`, {
+        status: newStatus,
+        note:   `Status updated to ${newStatus}`,
+        ...(estimatedDelivery && { estimatedDelivery }),
+      })
       loadOrders()
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to update status')

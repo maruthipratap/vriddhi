@@ -52,14 +52,18 @@ const orderRepository = {
     return Order.findOne({ razorpayOrderId })
   },
 
-  async updateStatus(orderId, status, note, updatedBy) {
+  async updateById(orderId, fields) {
+    return Order.findByIdAndUpdate(orderId, { $set: fields }, { new: true })
+  },
+
+  async updateStatus(orderId, status, note, updatedBy, extra = {}) {
+    const setFields = { status, ...extra }
+    if (status === 'delivered') setFields.deliveredAt = new Date()
     return Order.findByIdAndUpdate(
       orderId,
       {
-        $set:  { status },
-        $push: {
-          timeline: { status, note, updatedBy, timestamp: new Date() }
-        },
+        $set:  setFields,
+        $push: { timeline: { status, note, updatedBy, timestamp: new Date() } },
       },
       { new: true }
     )

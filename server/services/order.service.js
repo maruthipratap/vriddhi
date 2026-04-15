@@ -161,10 +161,12 @@ const orderService = {
       await order.save()
     }
 
-    // 8. For COD — confirm immediately
+    // 8. For COD — confirm immediately + set estimated delivery
     if (paymentMethod === 'cod') {
+      const estimatedDelivery = calcEstimatedDelivery(deliveryType)
       await orderRepository.updateStatus(
-        order._id, 'confirmed', 'COD order confirmed', farmerId
+        order._id, 'confirmed', 'COD order confirmed', farmerId,
+        { estimatedDelivery }
       )
     }
 
@@ -220,6 +222,10 @@ const orderService = {
       order._id, 'paid', razorpayPaymentId
     )
 
+    // Set estimated delivery on payment confirmation
+    const estimatedDelivery = calcEstimatedDelivery(order.deliveryType)
+    await orderRepository.updateById(order._id, { estimatedDelivery }).catch(() => {})
+
     // Notify farmer — payment confirmed
     notifyFarmerStatus(order.farmerId, { ...order.toObject(), status: 'confirmed' }).catch(() => {})
 
@@ -261,7 +267,7 @@ const orderService = {
   },
 
   // ── Update order status (shop owner) ─────────────────────────
-  async updateOrderStatus(orderId, shopId, newStatus, note, userId) {
+  async updateOrderStatus(orderId, shopId, newStatus, note, userId, estimatedDelivery) {
     const order = await orderRepository.findByIdAndShop(orderId, shopId)
     if (!order) {
       const err  = new Error('Order not found')
@@ -271,22 +277,24 @@ const orderService = {
     }
 
     const validTransitions = {
-      confirmed:  ['processing'],
-      processing: ['ready'],
-      ready:      ['out_for_delivery', 'delivered'],
+      confirmed:        ['processing'],
+      processing:       ['ready'],
+      ready:            ['out_for_delivery', 'delivered'],
       out_for_delivery: ['delivered'],
     }
 
     if (!validTransitions[order.status]?.includes(newStatus)) {
-      const err  = new Error(
-        `Cannot transition from ${order.status} to ${newStatus}`
-      )
+      const err  = new Error(`Cannot transition from ${order.status} to ${newStatus}`)
       err.status = 400
       err.code   = 'INVALID_STATUS_TRANSITION'
       throw err
     }
 
-    const updated = await orderRepository.updateStatus(orderId, newStatus, note, userId)
+    // Build extra fields: shop can set/update estimated delivery any time
+    const extra = {}
+    if (estimatedDelivery) extra.estimatedDelivery = new Date(estimatedDelivery)
+
+    const updated = await orderRepository.updateStatus(orderId, newStatus, note, userId, extra)
 
     // Notify farmer of the status change
     notifyFarmerStatus(order.farmerId, updated).catch(() => {})
@@ -547,6 +555,25 @@ function calculateDeliveryFee(subtotal) {
   if (subtotal >= 100000) return 0        // free above ₹1000
   if (subtotal >= 50000)  return 2900     // ₹29 for ₹500-999
   return 4900                              // ₹49 below ₹500
+}
+
+// ── Estimated delivery date ───────────────────────────────────
+// Pickup: same day. Delivery orders: 3 business days from now.
+function calcEstimatedDelivery(deliveryType) {
+  const date = new Date()
+  if (deliveryType === 'pickup') {
+    // Same day — end of business (6 PM)
+    date.setHours(18, 0, 0, 0)
+    return date
+  }
+  // 3 business days — skip weekends
+  let days = 0
+  while (days < 3) {
+    date.setDate(date.getDate() + 1)
+    const dow = date.getDay()
+    if (dow !== 0 && dow !== 6) days++  // skip Sun(0) and Sat(6)
+  }
+  return date
 }
 
 export default orderService

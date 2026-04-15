@@ -29,6 +29,63 @@ function fmt(paise) {
   return `₹${(paise / 100).toFixed(0)}`
 }
 
+// ── Delivery tracking card ────────────────────────────────────
+function DeliveryCard({ estimatedDelivery, deliveredAt, status }) {
+  const estimated = new Date(estimatedDelivery)
+  const now       = new Date()
+
+  if (status === 'delivered' && deliveredAt) {
+    const delivered = new Date(deliveredAt)
+    const onTime    = delivered <= estimated
+    return (
+      <div className="panel flex items-center gap-3 p-4">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-50">
+          <IconGlyph name="check" size={18} className="text-green-600" />
+        </div>
+        <div>
+          <p className="font-semibold text-foreground text-sm">Delivered</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {delivered.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+            {' '}&mdash;{' '}
+            <span className={onTime ? 'text-green-600' : 'text-amber-600'}>
+              {onTime ? 'On time' : 'Delayed'}
+            </span>
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  const msLeft   = estimated.getTime() - now.getTime()
+  const daysLeft = Math.ceil(msLeft / 86400000)
+  const overdue  = daysLeft < 0
+
+  return (
+    <div className={`panel flex items-center gap-3 p-4 ${overdue ? 'border-amber-200 bg-amber-50' : ''}`}>
+      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${overdue ? 'bg-amber-100' : 'bg-blue-50'}`}>
+        <IconGlyph name="truck" size={18} className={overdue ? 'text-amber-600' : 'text-blue-600'} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-semibold text-foreground text-sm">
+          {overdue ? 'Delivery Delayed' : 'Expected Delivery'}
+        </p>
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          {estimated.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}
+        </p>
+      </div>
+      <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${
+        overdue ? 'bg-amber-200 text-amber-800' : 'bg-blue-100 text-blue-700'
+      }`}>
+        {overdue
+          ? `${Math.abs(daysLeft)}d late`
+          : daysLeft === 0
+            ? 'Today'
+            : `${daysLeft}d left`}
+      </span>
+    </div>
+  )
+}
+
 const RETURN_WINDOW_DAYS = 7
 
 function canRequestReturn(order) {
@@ -220,6 +277,28 @@ export default function OrderDetail() {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Delivery tracking card */}
+        {order.deliveryType === 'delivery' && order.estimatedDelivery && (
+          <DeliveryCard
+            estimatedDelivery={order.estimatedDelivery}
+            deliveredAt={order.deliveredAt}
+            status={order.status}
+          />
+        )}
+        {order.deliveryType === 'pickup' && order.estimatedDelivery && order.status !== 'delivered' && (
+          <div className="panel flex items-center gap-3 p-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50">
+              <IconGlyph name="box" size={18} className="text-blue-600" />
+            </div>
+            <div>
+              <p className="font-semibold text-foreground text-sm">Ready for Pickup</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Expected by {new Date(order.estimatedDelivery).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+              </p>
+            </div>
           </div>
         )}
 

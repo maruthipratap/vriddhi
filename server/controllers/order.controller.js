@@ -117,7 +117,7 @@ export async function updateOrderStatus(req, res, next) {
       })
     }
 
-    const { status, note } = req.body
+    const { status, note, estimatedDelivery } = req.body
     if (!status) {
       return res.status(400).json({
         success: false,
@@ -131,6 +131,7 @@ export async function updateOrderStatus(req, res, next) {
       status,
       note || `Status updated to ${status}`,
       req.user.id,
+      estimatedDelivery || null,
     )
 
     res.status(200).json({
