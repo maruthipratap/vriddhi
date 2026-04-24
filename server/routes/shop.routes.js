@@ -9,6 +9,7 @@ import {
   getShopAnalytics,
 } from '../controllers/shop.controller.js'
 import { protect, role } from '../middleware/auth.middleware.js'
+import { upload }        from '../middleware/upload.middleware.js'
 
 const router = Router()
 
@@ -21,7 +22,7 @@ router.use(protect)
 router.get   ('/my/dashboard', role('shop_owner'),        getShopDashboard)
 router.get   ('/my/analytics', role('shop_owner'),        getShopAnalytics)
 router.get   ('/my/shop', role('shop_owner'),             getMyShop)
-router.post  ('/',        role('shop_owner'),             createShop)
-router.patch ('/my/shop', role('shop_owner'),             updateShop)
+router.post  ('/',        role('shop_owner'), upload.single('image'), createShop)
+router.patch ('/my/shop', role('shop_owner'), upload.single('image'), updateShop)
 
 export default router

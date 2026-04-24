@@ -36,6 +36,12 @@ const Forum = lazy(() => import('./pages/farmer/Forum.jsx'))
 const MandiPrices = lazy(() => import('./pages/farmer/MandiPrices.jsx'))
 const FarmerSettings = lazy(() => import('./pages/farmer/FarmerSettings.jsx'))
 
+// Rentals (Farmer + Equipment Owner)
+const Rentals = lazy(() => import('./pages/farmer/Rentals.jsx'))
+const RentalDetail = lazy(() => import('./pages/farmer/RentalDetail.jsx'))
+const MyRentals = lazy(() => import('./pages/farmer/MyRentals.jsx'))
+const EquipmentDashboard = lazy(() => import('./pages/equipment/EquipmentDashboard.jsx'))
+
 // Chat
 const ChatList = lazy(() => import('./pages/chat/ChatList.jsx'))
 const ChatRoom = lazy(() => import('./pages/chat/ChatRoom.jsx'))
@@ -183,6 +189,12 @@ export default function App() {
           <Route path="/orders" element={<D><Orders /></D>} />
           <Route path="/orders/:id" element={<D><OrderDetail /></D>} />
           <Route path="/notifications" element={<D><Notifications /></D>} />
+          
+          {/* ── PRIVATE: Rentals ── */}
+          <Route path="/rentals" element={<D><Rentals /></D>} />
+          <Route path="/rentals/:id" element={<D><RentalDetail /></D>} />
+          <Route path="/my-rentals" element={<D><MyRentals /></D>} />
+          <Route path="/equipment/dashboard" element={<D><EquipmentDashboard /></D>} />
 
           {/* ── PRIVATE: Chat ── */}
           <Route path="/chats" element={<D fallback={<ChatLoader />}><ChatList /></D>} />

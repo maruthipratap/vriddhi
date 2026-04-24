@@ -1,9 +1,26 @@
 import api from './api.js'
 
+// ── Register service worker ───────────────────────────────────
+export async function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return null
+  try {
+    const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' })
+    console.log('[Push] Service worker registered:', reg.scope)
+    return reg
+  } catch (err) {
+    console.warn('[Push] SW registration failed:', err.message)
+    return null
+  }
+}
+
 // ── Fetch VAPID public key from server ────────────────────────
 async function getVapidPublicKey() {
-  const res = await api.get('/push/vapid-public-key')
-  return res.data.publicKey
+  try {
+    const res = await api.get('/push/vapid-public-key')
+    return res.data.publicKey
+  } catch {
+    return null
+  }
 }
 
 // Convert base64url string → Uint8Array (required by pushManager.subscribe)
@@ -14,40 +31,72 @@ function urlBase64ToUint8Array(base64String) {
   return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)))
 }
 
+// ── Check if push is supported ─────────────────────────────────
+export function isPushSupported() {
+  return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window
+}
+
 // ── Subscribe this device to push ────────────────────────────
 export async function subscribeToPush() {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null
+  if (!isPushSupported()) return null
 
-  const registration = await navigator.serviceWorker.ready
-  const permission   = await Notification.requestPermission()
-  if (permission !== 'granted') return null
+  try {
+    // Register SW if not already registered
+    let registration = await navigator.serviceWorker.getRegistration('/sw.js')
+    if (!registration) {
+      registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' })
+    }
 
-  const vapidPublicKey = await getVapidPublicKey()
-  if (!vapidPublicKey) return null
+    // Wait for SW to be ready
+    await navigator.serviceWorker.ready
 
-  const subscription = await registration.pushManager.subscribe({
-    userVisibleOnly:      true,
-    applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
-  })
+    const permission = await Notification.requestPermission()
+    if (permission !== 'granted') return null
 
-  // Save subscription to server
-  const sub = subscription.toJSON()
-  await api.post('/push/subscribe', {
-    endpoint: sub.endpoint,
-    keys:     sub.keys,
-  })
+    const vapidPublicKey = await getVapidPublicKey()
+    if (!vapidPublicKey) return null
 
-  return subscription
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly:      true,
+      applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+    })
+
+    // Save subscription to server
+    const sub = subscription.toJSON()
+    await api.post('/push/subscribe', {
+      endpoint: sub.endpoint,
+      keys:     sub.keys,
+    })
+
+    console.log('[Push] Subscribed successfully')
+    return subscription
+  } catch (err) {
+    console.warn('[Push] Subscribe failed:', err.message)
+    return null
+  }
 }
 
 // ── Unsubscribe this device ───────────────────────────────────
 export async function unsubscribeFromPush() {
   if (!('serviceWorker' in navigator)) return
 
-  const registration   = await navigator.serviceWorker.ready
-  const subscription   = await registration.pushManager.getSubscription()
-  if (!subscription) return
+  try {
+    const registration = await navigator.serviceWorker.getRegistration('/sw.js')
+    if (!registration) return
 
-  await api.delete('/push/unsubscribe', { data: { endpoint: subscription.endpoint } })
-  await subscription.unsubscribe()
+    const subscription = await registration.pushManager.getSubscription()
+    if (!subscription) return
+
+    await api.delete('/push/unsubscribe', { data: { endpoint: subscription.endpoint } })
+    await subscription.unsubscribe()
+    console.log('[Push] Unsubscribed')
+  } catch (err) {
+    console.warn('[Push] Unsubscribe failed:', err.message)
+  }
+}
+
+// ── Get current push permission state ────────────────────────
+export function getPushPermissionState() {
+  if (!('Notification' in window)) return 'unsupported'
+  return Notification.permission // 'default' | 'granted' | 'denied'
 }

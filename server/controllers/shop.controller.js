@@ -7,6 +7,7 @@ import {
   createShopSchema,
   updateShopSchema,
 } from '../models/Shop.js'
+import { uploadToCloudinary } from '../middleware/upload.middleware.js'
 
 // ── Create shop ───────────────────────────────────────────────
 export async function createShop(req, res, next) {
@@ -43,6 +44,13 @@ export async function createShop(req, res, next) {
         coordinates: [validated.coordinates.lng, validated.coordinates.lat],
       },
     })
+
+    // Upload shop image if provided
+    if (req.file) {
+      const { url } = await uploadToCloudinary(req.file.buffer, 'vriddhi/shops')
+      shop.images = [url]
+      await shop.save()
+    }
 
     res.status(201).json({
       success: true,
@@ -148,6 +156,12 @@ export async function updateShop(req, res, next) {
         coordinates: [validated.coordinates.lng, validated.coordinates.lat],
       }
       delete validated.coordinates
+    }
+
+    // Upload new shop image if provided
+    if (req.file) {
+      const { url } = await uploadToCloudinary(req.file.buffer, 'vriddhi/shops')
+      validated.images = [url]  // replace existing image
     }
 
     const updated = await shopRepository.updateById(shop._id, validated)

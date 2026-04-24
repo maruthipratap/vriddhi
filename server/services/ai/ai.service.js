@@ -10,6 +10,8 @@ import { redis }      from '../../config/redis.js'
 const USE_MOCK = process.env.ANTHROPIC_API_KEY === 'mock'
                  || !process.env.ANTHROPIC_API_KEY
 
+console.log(`[AI] Mode: ${USE_MOCK ? '🟡 MOCK (add real ANTHROPIC_API_KEY to enable)' : '🟢 REAL Claude AI active'}`)
+
 // ── Mock responses for development ───────────────────────────
 const mockResponses = {
   recommendSeeds: {

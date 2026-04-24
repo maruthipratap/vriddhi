@@ -11,6 +11,7 @@ const farmerItems = [
   { title: 'AI Advisor',    url: '/ai/seeds',       icon: 'bot'         },
   { title: 'Cart',          url: '/cart',           icon: 'cart'        },
   { title: 'Orders',        url: '/orders',         icon: 'box'         },
+  { title: 'Rentals',       url: '/rentals',        icon: 'truck'       },
   { title: 'Notifications', url: '/notifications',  icon: 'bell'        },
   { title: 'Mandi Prices',  url: '/mandi',          icon: 'trendingUp'  },
   { title: 'Crop Calendar', url: '/calendar',       icon: 'calendar'    },

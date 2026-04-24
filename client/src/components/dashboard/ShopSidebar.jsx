@@ -9,6 +9,7 @@ const shopItems = [
   { title: 'Dashboard', url: '/shop/dashboard', icon: 'chart'         },
   { title: 'Products',  url: '/shop/inventory', icon: 'box'           },
   { title: 'Orders',    url: '/shop/orders',    icon: 'clipboard'     },
+  { title: 'Equipment', url: '/equipment/dashboard', icon: 'truck'    },
   { title: 'Chat',      url: '/chats',          icon: 'messageSquare' },
   { title: 'Settings',  url: '/shop/settings',  icon: 'settings'      },
 ]
