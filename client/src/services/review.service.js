@@ -23,6 +23,13 @@ const reviewService = {
     return res.data.data.reviews
   },
 
+  async submitSingleProductReview(orderId, formData) {
+    const res = await api.post(`/orders/${orderId}/single-product-review`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    return res.data.data.review
+  },
+
   async getMyProductReviews(orderId) {
     const res = await api.get(`/orders/${orderId}/product-reviews/me`)
     return res.data.data.reviews  // []

@@ -277,6 +277,15 @@ export default function ProductDetail() {
                   {r.comment && (
                     <p className="mt-1 text-sm text-muted-foreground">{r.comment}</p>
                   )}
+                  {r.photos && r.photos.length > 0 && (
+                    <div className="mt-2 flex gap-2 overflow-x-auto">
+                      {r.photos.map((photo, i) => (
+                        <a key={i} href={photo} target="_blank" rel="noreferrer" className="shrink-0">
+                          <img src={photo} alt="Review" className="h-16 w-16 rounded-lg object-cover border border-border" />
+                        </a>
+                      ))}
+                    </div>
+                  )}
                   <p className="mt-1 text-xs text-muted-foreground">
                     {new Date(r.createdAt).toLocaleDateString('en-IN')}
                   </p>

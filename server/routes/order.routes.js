@@ -10,6 +10,7 @@ import {
   requestReturn,
   resolveReturn,
 } from '../controllers/order.controller.js'
+import { downloadInvoice } from '../controllers/invoice.controller.js'
 import { protect, role } from '../middleware/auth.middleware.js'
 
 const router = Router()
@@ -21,6 +22,7 @@ router.post('/',                    role('farmer'),             createOrder)
 router.post('/verify-payment',      role('farmer'),             verifyPayment)
 router.get ('/my',                  role('farmer'),             getMyOrders)
 router.get ('/:id',                 role('farmer','shop_owner'),getOrder)
+router.get ('/:id/invoice',         role('farmer','shop_owner'),downloadInvoice)
 router.post('/:id/cancel',          role('farmer','shop_owner'),cancelOrder)
 
 // Shop owner routes

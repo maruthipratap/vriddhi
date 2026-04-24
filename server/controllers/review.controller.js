@@ -2,7 +2,8 @@ import reviewRepository        from '../repositories/review.repository.js'
 import productReviewRepository from '../repositories/productReview.repository.js'
 import orderRepository         from '../repositories/order.repository.js'
 import { createReviewSchema }        from '../models/Review.js'
-import { createProductReviewSchema } from '../models/ProductReview.js'
+import { createProductReviewSchema, createSingleProductReviewSchema } from '../models/ProductReview.js'
+import { uploadToCloudinary } from '../middleware/upload.middleware.js'
 
 // ── POST /orders/:orderId/reviews ─────────────────────────────
 // Farmer submits a review for a delivered order.
@@ -145,6 +146,65 @@ export async function createProductReviews(req, res, next) {
       success: true,
       message: `${created.length} product review(s) submitted`,
       data:    { reviews: created },
+    })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// ──  POST /orders/:orderId/single-product-review ─────────────────
+// Allows uploading photos with a single product review via FormData
+export async function createSingleProductReview(req, res, next) {
+  try {
+    const { orderId } = req.params
+
+    const order = await orderRepository.findByIdAndFarmer(orderId, req.user.id)
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found', code: 'ORDER_NOT_FOUND' })
+    }
+    if (order.status !== 'delivered' && order.status !== 'returned') {
+      return res.status(400).json({ success: false, message: 'You can only review delivered orders', code: 'ORDER_NOT_DELIVERED' })
+    }
+
+    const { productId, rating, comment } = createSingleProductReviewSchema.parse(req.body)
+
+    // Validate productId is in order
+    const isValid = order.items.some(i => i.productId.toString() === productId)
+    if (!isValid) return res.status(400).json({ success: false, message: 'Product not in order' })
+
+    // Upload photos if any (max 3 by route definition)
+    let photos = []
+    if (req.files?.length) {
+      photos = await Promise.all(
+        req.files.map(f => uploadToCloudinary(f.buffer, 'vriddhi/reviews').then(r => r.url))
+      )
+    }
+
+    // Try to create (Unique Index handles duplicates)
+    let review
+    try {
+      review = await productReviewRepository.create({
+        farmerId:  req.user.id,
+        productId,
+        shopId:    order.shopId,
+        orderId,
+        rating,
+        comment,
+        photos,
+      })
+    } catch (err) {
+      if (err.code === 11000) {
+        return res.status(409).json({ success: false, message: 'Already reviewed' })
+      }
+      throw err
+    }
+
+    productReviewRepository.refreshProductRating(productId).catch(() => {})
+
+    res.status(201).json({
+      success: true,
+      message: 'Review submitted',
+      data: { review }
     })
   } catch (err) {
     next(err)

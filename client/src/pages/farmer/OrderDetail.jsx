@@ -108,6 +108,7 @@ export default function OrderDetail() {
   const [returnReason,    setReturnReason]    = useState('')
   const [submitting,      setSubmitting]      = useState(false)
   const [returnError,     setReturnError]     = useState('')
+  const [downloading,     setDownloading]     = useState(false)
 
   // Product reviews
   const [productRatings,   setProductRatings]   = useState({})  // { productId: { rating, comment } }
@@ -141,18 +142,32 @@ export default function OrderDetail() {
       })
       .map(item => {
         const pid = item.productId?.toString?.() || item.productId
-        return { productId: pid, rating: productRatings[pid].rating, comment: productRatings[pid].comment || '' }
+        return { 
+          productId: pid, 
+          rating: productRatings[pid].rating, 
+          comment: productRatings[pid].comment || '',
+          photos: productRatings[pid].photos || []
+        }
       })
     if (toSubmit.length === 0) return
     setReviewSubmitting(true)
     try {
-      await reviewService.submitProductReviews(order._id, toSubmit)
+      for (const item of toSubmit) {
+        const formData = new FormData()
+        formData.append('productId', item.productId)
+        formData.append('rating', item.rating)
+        formData.append('comment', item.comment)
+        item.photos.forEach(f => formData.append('photos', f))
+        
+        await reviewService.submitSingleProductReview(order._id, formData)
+      }
       setReviewDone(true)
       const newMap = { ...reviewedProducts }
       toSubmit.forEach(r => { newMap[r.productId] = { rating: r.rating, comment: r.comment } })
       setReviewedProducts(newMap)
     } catch (e) {
       console.error(e)
+      alert(e.response?.data?.message || 'Failed to submit reviews.')
     } finally {
       setReviewSubmitting(false)
     }
@@ -174,6 +189,26 @@ export default function OrderDetail() {
       setReturnError(err.response?.data?.message || 'Failed to submit return request.')
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  async function downloadInvoice() {
+    setDownloading(true)
+    try {
+      const res = await api.get(`/orders/${id}/invoice`, { responseType: 'blob' })
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `Invoice-${order.orderNumber}.pdf`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (e) {
+      console.error('Failed to download invoice', e)
+      alert('Failed to download invoice.')
+    } finally {
+      setDownloading(false)
     }
   }
 
@@ -209,9 +244,19 @@ export default function OrderDetail() {
             {order.status.replace(/_/g, ' ')}
           </span>
         </div>
-        <p className="mt-1 text-xs text-white/60">
-          Placed on {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
-        </p>
+        <div className="mt-3 flex items-center justify-between">
+          <p className="text-xs text-white/60">
+            Placed on {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+          </p>
+          <button
+            onClick={downloadInvoice}
+            disabled={downloading}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/20 disabled:opacity-50"
+          >
+            <IconGlyph name="download" size={14} />
+            {downloading ? 'Downloading...' : 'Invoice'}
+          </button>
+        </div>
       </div>
 
       <div className="section-container mt-6 space-y-4">
@@ -424,16 +469,34 @@ export default function OrderDetail() {
                     </div>
                     {/* Comment input — only if star selected and not yet reviewed */}
                     {!existing && current.rating > 0 && (
-                      <input
-                        type="text"
-                        placeholder="Add a comment (optional)"
-                        value={current.comment || ''}
-                        onChange={e => setProductRatings(prev => ({
-                          ...prev,
-                          [pid]: { ...prev[pid], comment: e.target.value }
-                        }))}
-                        className="rounded-lg border border-border bg-secondary px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                      />
+                      <div className="mt-2 flex flex-col gap-2">
+                        <input
+                          type="text"
+                          placeholder="Add a comment (optional)"
+                          value={current.comment || ''}
+                          onChange={e => setProductRatings(prev => ({
+                            ...prev,
+                            [pid]: { ...prev[pid], comment: e.target.value }
+                          }))}
+                          className="rounded-lg border border-border bg-secondary px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                        />
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={e => {
+                            const files = Array.from(e.target.files).slice(0, 3)
+                            setProductRatings(prev => ({
+                              ...prev,
+                              [pid]: { ...prev[pid], photos: files }
+                            }))
+                          }}
+                          className="block w-full text-[11px] text-muted-foreground file:mr-3 file:rounded-lg file:border-0 file:bg-primary/10 file:px-3 file:py-1 file:text-[11px] file:font-semibold file:text-primary hover:file:bg-primary/20"
+                        />
+                        {current.photos && current.photos.length > 0 && (
+                          <p className="text-[10px] text-muted-foreground">{current.photos.length} photo(s) selected (max 3)</p>
+                        )}
+                      </div>
                     )}
                   </div>
                 )

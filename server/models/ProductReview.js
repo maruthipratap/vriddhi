@@ -12,6 +12,12 @@ export const createProductReviewSchema = z.object({
   })).min(1).max(20),
 })
 
+export const createSingleProductReviewSchema = z.object({
+  productId: z.string().min(1),
+  rating:    z.preprocess((val) => Number(val), z.number().int().min(1).max(5)),
+  comment:   z.string().max(500).optional().default(''),
+})
+
 // ─────────────────────────────────────────────────────────────
 // MONGOOSE SCHEMA
 // ─────────────────────────────────────────────────────────────
@@ -52,6 +58,9 @@ const productReviewSchema = new mongoose.Schema(
       default:   '',
       maxlength: 500,
     },
+    photos: [{
+      type: String,
+    }],
   },
   { timestamps: true }
 )

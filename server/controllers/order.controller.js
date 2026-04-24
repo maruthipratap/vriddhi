@@ -6,6 +6,7 @@ import {
   returnRequestSchema,
   resolveReturnSchema,
 } from '../models/Order.js'
+import { getIO } from '../config/socket.js'
 
 // ── Create order ──────────────────────────────────────────────
 export async function createOrder(req, res, next) {
@@ -134,6 +135,17 @@ export async function updateOrderStatus(req, res, next) {
       estimatedDelivery || null,
     )
 
+    // Emit live socket update to the farmer
+    const io = getIO()
+    if (io) {
+      io.to(`user_${order.farmerId}`).emit('ORDER_UPDATED', {
+        orderId: order._id,
+        orderNumber: order.orderNumber,
+        status: order.status,
+        message: `Your order #${order.orderNumber} is now ${order.status.replace(/_/g, ' ')}`,
+      })
+    }
+
     res.status(200).json({
       success: true,
       message: `Order ${status} successfully`,
@@ -177,6 +189,17 @@ export async function resolveReturn(req, res, next) {
       decision,
       note,
     )
+
+    const io = getIO()
+    if (io) {
+      io.to(`user_${order.farmerId}`).emit('ORDER_UPDATED', {
+        orderId: order._id,
+        orderNumber: order.orderNumber,
+        status: order.status,
+        message: `Your return request for order #${order.orderNumber} was ${decision}.`,
+      })
+    }
+
     res.status(200).json({
       success: true,
       message: `Return ${decision}`,

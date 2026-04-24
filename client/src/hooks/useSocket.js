@@ -35,10 +35,17 @@ export function useSocket(accessToken) {
     })
 
     // ── Order status updates ──────────────────────────────────
-    // Server emits this to user_${farmerId} room when shop updates order status
-    socket.on('order_status_update', () => {
+    // Server emits ORDER_UPDATED to user_${farmerId} room when shop updates order status
+    socket.on('ORDER_UPDATED', (payload) => {
       // Re-fetch page 1 of orders so the list reflects the new status
       dispatch(fetchMyOrders(1))
+      
+      // Fire a system alert toast or notification if supported
+      if (window.Notification && Notification.permission === 'granted') {
+        new Notification('Vriddhi Order Update', { body: payload.message })
+      } else {
+        alert(payload.message) // Fallback toast natively
+      }
     })
 
     return () => {
