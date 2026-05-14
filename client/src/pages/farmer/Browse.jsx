@@ -182,6 +182,12 @@ export default function Browse() {
                         Organic
                       </span>
                     )}
+                    {product.isShopVerified && (
+                      <span className="inline-flex items-center gap-1 rounded-md bg-blue-100 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700">
+                        <IconGlyph name="badgeCheck" size={12} />
+                        Verified
+                      </span>
+                    )}
                     {!product.isAvailable && <span className="badge-red">Out of stock</span>}
                   </div>
                 </Link>

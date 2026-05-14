@@ -145,6 +145,7 @@ export async function getNearbyProducts(req, res, next) {
     }
 
     // Step 2: find products in those shops
+    const shopMap  = new Map(nearbyShops.map(s => [s._id.toString(), s.verificationStatus]))
     const shopIds  = nearbyShops.map(s => s._id)
     const filters  = category ? { category } : {}
 
@@ -158,11 +159,17 @@ export async function getNearbyProducts(req, res, next) {
       products = await productRepository.findByShopIds(shopIds, filters)
     }
 
+    // Inject shop verification status
+    const enrichedProducts = products.map(p => ({
+      ...p.toObject?.() || p,
+      isShopVerified: shopMap.get(p.shopId.toString()) === 'verified'
+    }))
+
     res.status(200).json({
       success: true,
       data: {
-        products,
-        count:  products.length,
+        products: enrichedProducts,
+        count:  enrichedProducts.length,
         shops:  nearbyShops.length,
       },
     })

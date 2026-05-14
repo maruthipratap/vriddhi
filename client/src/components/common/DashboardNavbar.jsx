@@ -5,6 +5,8 @@ import { logoutUser } from '../../store/slices/authSlice.js'
 import IconGlyph from './IconGlyph.jsx'
 import { getDashboardPath } from '../../utils/dashboardPath.js'
 import { useDarkMode } from '../../hooks/useDarkMode.js'
+import { useTranslation } from 'react-i18next'
+import { LANGUAGES } from '../../i18n.js'
 
 export default function DashboardNavbar() {
   const navigate = useNavigate()
@@ -14,7 +16,10 @@ export default function DashboardNavbar() {
   const cartCount = useSelector((state) => state.orders.cart.length)
   const [menuOpen, setMenuOpen] = useState(false)
   const { isDark, toggle: toggleDark } = useDarkMode()
+  const { i18n } = useTranslation()
   const homePath = getDashboardPath(user)
+  
+  const currentLang = LANGUAGES.find(l => l.code === (i18n.language || 'en').split('-')[0]) || LANGUAGES[0]
 
   const handleLogout = async () => {
     await dispatch(logoutUser())
@@ -117,6 +122,29 @@ export default function DashboardNavbar() {
                 </Link>
               </>
             )}
+            {/* Language switcher */}
+            <div className="relative group">
+              <button className="flex items-center gap-1 p-2 rounded-xl hover:bg-secondary transition-colors text-xs font-semibold text-foreground">
+                <IconGlyph name="globe" size={16} className="text-muted-foreground" />
+                <span className="hidden md:inline-block uppercase">{currentLang.code}</span>
+              </button>
+              <div className="absolute right-0 top-full mt-1 hidden w-32 flex-col rounded-xl border border-border bg-white dark:bg-card p-1 shadow-lg group-hover:flex">
+                {LANGUAGES.map(lang => (
+                  <button
+                    key={lang.code}
+                    onClick={() => i18n.changeLanguage(lang.code)}
+                    className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs font-medium transition-colors ${
+                      (i18n.language || 'en').startsWith(lang.code)
+                        ? 'bg-primary text-primary-foreground'
+                        : 'hover:bg-secondary text-foreground'
+                    }`}
+                  >
+                    <span>{lang.native}</span>
+                    <span className="opacity-60">{lang.code.toUpperCase()}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
 
             {/* Dark mode toggle */}
             <button
